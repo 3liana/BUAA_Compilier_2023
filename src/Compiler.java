@@ -30,15 +30,12 @@ public class Compiler {
                     }
                 }
                 Lexer lexer = new Lexer(line);
-//                int value = lexer.next();
                 while (lexer.getValue() == 0) {
                     Token curToken = lexer.peekToken();
                     tokens.add(curToken);
-//                    String res = lexer.peek();
-//                    byte[] dataBytes = (res + '\n').getBytes();
-//                    fOut.write(dataBytes);
                     lexer.next();
                 }
+                //lexer.getValue : -1:这句已经读到了末尾；-2：遇见了注释
                 if (lexer.getValue() == -2) {
                     inComment = true;
                 } else {

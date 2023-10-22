@@ -9,7 +9,6 @@ public class Lexer {
     public Lexer(String input) {
         this.input = input;
         this.next();
-//        this.next(false);//为cutToken初始化
     }
 
     public int getValue() {
@@ -77,7 +76,6 @@ public class Lexer {
         if (pos == input.length()) {
             this.value = -1;
             return;
-//            return -1;
         }
         char c = input.charAt(pos);
         while (c == ' ' || c == '\t') {
@@ -85,7 +83,6 @@ public class Lexer {
             if (pos == input.length()) {
                 this.value = -1;
                 return;
-//                return -1;
             }
             c = input.charAt(pos);
         }
@@ -181,7 +178,6 @@ public class Lexer {
                         //预读一个字符 如果是//直接结束
                         this.value = -1;
                         return;
-//                        return -1;
                     }
                     if (pos + 1 < input.length() && input.charAt(pos + 1) == '*') {
                         //读到/*
@@ -201,12 +197,10 @@ public class Lexer {
                             if (pos == input.length()) {
                                 this.value = -1;
                                 return;
-//                                return -1;
                             }
                         } else {
                             this.value = -2;
                             return;
-//                            return -2;
                         }
                     }
                     this.matchOne(c, Category.DIV);
@@ -264,7 +258,6 @@ public class Lexer {
         }
         this.value = 0;
         return;
-//        return 0;
     }
 
     public String peek() {
