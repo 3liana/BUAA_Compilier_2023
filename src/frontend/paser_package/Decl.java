@@ -1,9 +1,9 @@
 package frontend.paser_package;
 
 public class Decl {
-    private int type;
-    private ConstDecl constDecl;
-    private VarDecl varDecl;
+    public int type;
+    public ConstDecl constDecl;
+    public VarDecl varDecl;
     public Decl(ConstDecl constDecl){
         this.type = 0;
         this.constDecl = constDecl;

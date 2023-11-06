@@ -3,7 +3,7 @@ package frontend.paser_package;
 import java.util.ArrayList;
 
 public class ConstDecl {
-    private ArrayList<ConstDef> defs;
+    public ArrayList<ConstDef> defs;
     public ConstDecl(ConstDef def) {
         this.defs = new ArrayList<>();
         this.defs.add(def);

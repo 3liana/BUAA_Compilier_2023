@@ -7,4 +7,7 @@ public class Ident {
     public Ident(Token token){
         this.token = token;
     }
+    public String getName(){
+        return this.token.getName();
+    }
 }

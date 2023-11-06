@@ -13,4 +13,7 @@ public class Token {
     public String toString(){
         return this.category.toString() + ' ' + this.name;
     }
+    public String getName(){
+        return this.name;
+    }
 }
