@@ -1,3 +1,15 @@
+int a=1000;
+int aaa(int a,int b){
+        return a+b;
+}
+void ab(){
+        a=1200;
+        return;
+}
 int main(){
-   f();
+        ab();
+        int b=a,a;
+        a=getint();
+        printf("%d\n",aaa(a,b));
+        return 0;
 }

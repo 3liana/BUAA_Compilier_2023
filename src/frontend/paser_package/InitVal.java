@@ -4,9 +4,9 @@ import java.util.ArrayList;
 
 public class InitVal {
     //为0：无{}，且只有一个exp；1:有{},无initval;2：有{}和>=1个initval
-    private int type;
-    private Exp exp;
-    private ArrayList<InitVal> initVals;
+    public int type;
+    public Exp exp;
+    public ArrayList<InitVal> initVals;
     public InitVal(Exp exp){
         this.type = 0;
         this.exp = exp;

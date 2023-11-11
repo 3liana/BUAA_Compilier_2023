@@ -5,10 +5,12 @@ import frontend.Lexer;
 import frontend.Parser;
 import frontend.lexer_package.*;
 import frontend.paser_package.CompUnit;
+import middleend.Generator;
+import middleend.IRModule;
 
 public class Compiler {
     public static void main(String[] args) throws IOException {
-        File outputFile = new File("output.txt");
+        File outputFile = new File("llvm_ir.txt");
         OutputStream fOut = new FileOutputStream(outputFile);
         String fileName = "testfile.txt";
         ArrayList<Token> tokens = new ArrayList<>();
@@ -21,10 +23,17 @@ public class Compiler {
         }
         Parser parser = new Parser(tokens);
         CompUnit compUnit = parser.parseCompUnit();
-        for (String res : parser.getAns()) {
-            byte[] dataBytes = (res + '\n').getBytes();
-            fOut.write(dataBytes);
-        }
+//        for (String res : parser.getAns()) {
+//            byte[] dataBytes = (res + '\n').getBytes();
+//            fOut.write(dataBytes);
+//        }
+        Generator generator = new Generator(compUnit);
+        generator.visitCompUnit();
+        IRModule module = IRModule.getModuleInstance();
+        String llvm = module.getPrint();
+        System.out.println(llvm);
+        byte[] llvmDataBytes = (llvm).getBytes();
+        fOut.write(llvmDataBytes);
     }
 
     private static void getTokens(BufferedReader br, ArrayList<Token> tokens) throws IOException {

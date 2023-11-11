@@ -1,11 +1,11 @@
 package frontend.paser_package;
 
 public class FuncDef {
-    private int type;
-    private FuncType funcType;
-    private Ident ident;
-    private FuncFParams params;//可有可无
-    private Block block;
+    public int type;//0:无形参 1：有形参
+    public FuncType funcType;
+    public Ident ident;
+    public FuncFParams params;//可有可无
+    public Block block;
     //无Param
     public FuncDef(FuncType funcType,Ident ident){
         this.funcType = funcType;

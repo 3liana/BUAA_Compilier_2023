@@ -578,10 +578,11 @@ public class Parser {
         while (this.getToken().getCategory() == Category.MULT ||
                 this.getToken().getCategory() == Category.DIV ||
                 this.getToken().getCategory() == Category.MOD) {
+            Token token = this.getToken();
             this.ans.add(prePos, "<MulExp>");
             this.next();
             UnaryExp exp2 = this.parseUnaryExp();
-            switch (this.getToken().getCategory()) {
+            switch (token.getCategory()) {
                 case MULT:
                     mulExp.appendUnaryExp(exp2, 1);
                     break;

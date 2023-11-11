@@ -3,8 +3,8 @@ package frontend.paser_package.stmt_package;
 import frontend.paser_package.*;
 
 public class StmtReturn extends Stmt {
-    private Exp exp;
-    private int type;
+    public Exp exp;
+    public int type;
     public StmtReturn(){
         this.type = 0;
     }

@@ -6,8 +6,8 @@ import frontend.paser_package.*;
 import java.util.ArrayList;
 
 public class StmtPrint extends Stmt {
-    private Token token;//STRCON
-    private ArrayList<Exp> exps;
+    public Token token;//STRCON
+    public ArrayList<Exp> exps;
 
     public StmtPrint(Token token){
         this.token = token;

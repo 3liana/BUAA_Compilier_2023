@@ -3,7 +3,7 @@ package frontend.paser_package;
 import java.util.ArrayList;
 
 public class Block {
-    private ArrayList<BlockItem> blockItems;
+    public ArrayList<BlockItem> blockItems;
 
     public Block() {
         this.blockItems = new ArrayList<>();

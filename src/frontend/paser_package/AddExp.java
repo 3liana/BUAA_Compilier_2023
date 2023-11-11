@@ -4,9 +4,9 @@ import java.util.ArrayList;
 
 //多个MulExp的加减BNF
 public class AddExp {
-    private ArrayList<MulExp> mulExps;
+    public ArrayList<MulExp> mulExps;
     //1表示+ -1表示-
-    private ArrayList<Integer> symbols;
+    public ArrayList<Integer> symbols;
     public AddExp(MulExp mulExp,int symbol){
         this.mulExps = new ArrayList<>();
         this.symbols = new ArrayList<>();

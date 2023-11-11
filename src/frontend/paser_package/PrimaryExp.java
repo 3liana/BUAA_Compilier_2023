@@ -1,13 +1,13 @@
 package frontend.paser_package;
 
 public class PrimaryExp {
-    private int type;
+    public int type;
     //( Exp )
-    private Exp exp;
+    public Exp exp;
     //LVal
-    private LVal lVal;
+    public LVal lVal;
     //Number
-    private Number number;
+    public Number number;
     public PrimaryExp(){
 
     }
