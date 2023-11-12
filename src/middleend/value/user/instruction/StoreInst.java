@@ -3,7 +3,7 @@ package middleend.value.user.instruction;
 import middleend.Value;
 import middleend.type.IntegerType;
 import middleend.type.Type;
-import middleend.value.BasicBlock;
+import middleend.value.user.BasicBlock;
 import middleend.value.user.Instruction;
 
 public class StoreInst extends Instruction {

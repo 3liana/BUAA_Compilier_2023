@@ -6,10 +6,8 @@ import middleend.Value;
 import middleend.symbol.SymbolTable;
 import middleend.type.Type;
 import middleend.type.VoidType;
-import middleend.value.BasicBlock;
 import middleend.value.ParamVarValue;
 import middleend.value.User;
-import middleend.value.VarValue;
 
 import java.util.ArrayList;
 
@@ -25,7 +23,7 @@ public class Function extends User {
         this.name = name;
         this.returnType = returnType;
         this.basicBlocks = new ArrayList<>();
-        this.addBasicBlock();//第一个basicBlock 即函数入口 是一个registerNum为0的BasicBlock
+        this.addFirstBasicBlock();//第一个basicBlock 即函数入口 是一个registerNum为0的BasicBlock
         boolean isMain = name.equals("main");
         if (isMain) {
             IRModule.getModuleInstance().setMainFunction(this);
@@ -47,7 +45,7 @@ public class Function extends User {
             symbolTable.addValue(value);//加入符号表
             this.params.add(value);
         }
-        this.addBasicBlock();
+        this.addFirstBasicBlock();
         //
         boolean isMain = name.equals("main");
         if (isMain) {
@@ -63,10 +61,12 @@ public class Function extends User {
     public String getName(){
         return "@" + this.name;
     }
-    public void addBasicBlock() {
-        this.basicBlocks.add(new BasicBlock(this.assignRegister()));
+    public void addFirstBasicBlock() {
+        this.basicBlocks.add(new BasicBlock(this.assignRegister(),true));
     }
-
+    public void addBasicBlock(){
+        this.basicBlocks.add(new BasicBlock(this.assignRegister(),false));
+    }
     public BasicBlock getCurBasicBlock() {
         return this.basicBlocks.get(this.basicBlocks.size() - 1);
     }

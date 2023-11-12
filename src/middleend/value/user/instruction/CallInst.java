@@ -1,8 +1,7 @@
 package middleend.value.user.instruction;
 
 import middleend.Value;
-import middleend.type.Type;
-import middleend.value.BasicBlock;
+import middleend.value.user.BasicBlock;
 import middleend.value.user.Function;
 import middleend.value.user.Instruction;
 

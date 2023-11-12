@@ -186,6 +186,7 @@ public class Generator {
 
 
     public void visitBlock(Block block) {
+        //
         for (BlockItem item : block.blockItems) {
             this.visitBlockItem(item);
         }
@@ -414,7 +415,9 @@ public class Generator {
     }
 
     public void visitStmtBlock(StmtBlock stmt) {
+        this.tableList.addTable();
         this.visitBlock(stmt.block);
+        this.tableList.popTable();
     }
 
     public void visitStmtExp(StmtExp stmt) {

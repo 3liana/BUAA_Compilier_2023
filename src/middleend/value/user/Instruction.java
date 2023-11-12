@@ -1,6 +1,5 @@
 package middleend.value.user;
 
-import middleend.value.BasicBlock;
 import middleend.value.User;
 
 public class Instruction extends User {
