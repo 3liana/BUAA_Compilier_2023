@@ -2,10 +2,10 @@ package frontend.paser_package.stmt_package;
 import frontend.paser_package.*;
 public class StmtFor extends Stmt{
     private int type;//OneHot
-    private ForStmt forStmt1;
-    private ForStmt forStmt2;
-    private Cond cond;
-    private Stmt stmt;
+    public ForStmt forStmt1 = null;
+    public ForStmt forStmt2 = null;
+    public Cond cond = null;
+    public Stmt stmt;
     public StmtFor(){
         this.type = 0;
     }

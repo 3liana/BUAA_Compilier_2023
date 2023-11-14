@@ -3,12 +3,13 @@ package middleend;
 import frontend.lexer_package.Category;
 import frontend.paser_package.*;
 import frontend.paser_package.stmt_package.*;
+import middleend.refill.RefillIf;
+import middleend.refill.RefillUtil;
 import middleend.symbol.*;
 import middleend.type.*;
 import middleend.value.*;
 import middleend.value.user.*;
 import middleend.value.user.instruction.*;
-import middleend.value.user.instruction.terminateInst.BrInst;
 import middleend.value.user.instruction.terminateInst.RetInst;
 
 
@@ -413,113 +414,95 @@ public class Generator {
             this.visitAddExp(stmt.exp.addExp);
         }
     }
-
-    public void visitStmtFor(StmtFor stmt) {
+    private boolean inStmtFor = false;
+    private boolean inStmtIf = false;
+    public void visitStmtFor(StmtFor stmtFor) {
         //todo 代码生成二
+        ForStmt forStmt1 = stmtFor.forStmt1;
+        ForStmt forStmt2 = stmtFor.forStmt2;
+        Cond cond = stmtFor.cond;
+        //以上都有可能是null
+        Stmt stmt = stmtFor.stmt;
+        //以上 解析出AST树的部分
+        if(forStmt1 != null){
+            this.visitForStmt(forStmt1);
+        }
+        if(cond != null){
+//            this.visitLOrExp(cond.exp);
+        }
     }
-
-    private ArrayList<ArrayList<BasicBlock>> refillBasicBlocks = new ArrayList<>();
-    private ArrayList<BasicBlock> tempLevel = new ArrayList<>();
-    private BasicBlock realTrueBlock = null;//if成立
-    private BasicBlock realFalseBlock = null;//if不成立
-    private BasicBlock endBlock = null;
-
-    public void refill() {
-        BasicBlock beforeIf = refillBasicBlocks.get(0).get(0);
-        //根据文法，肯定是至少有一层lAndExp存在的
-        BasicBlock ifBlock = refillBasicBlocks.get(1).get(0);
-        new BrInst(beforeIf, ifBlock);
-        for (int i = 1; i < refillBasicBlocks.size() - 1; i++) {
-            ArrayList<BasicBlock> level = refillBasicBlocks.get(i);//表示一个lAndExp
-            for (int j = 0; j < level.size() - 1; j++) {
-                //遍历第一个直到倒数第二个EqBlock块
-                BasicBlock b = level.get(j);
-                new BrInst(b, b.reVar, level.get(j + 1), refillBasicBlocks.get(i + 1).get(0));
-                //为True遍历本层的下一个块，为false遍历下一层
-            }
-            BasicBlock b = level.get(level.size() - 1);
-            new BrInst(b, b.reVar, realTrueBlock, refillBasicBlocks.get(i + 1).get(0));
-        }
-        //最后一个LOrExp
-        ArrayList<BasicBlock> level = refillBasicBlocks.get(refillBasicBlocks.size() - 1);
-        for (int j = 0; j < level.size() - 1; j++) {
-            //遍历第一个直到倒数第二个EqBlock块
-            BasicBlock b = level.get(j);
-            BasicBlock temp = this.realFalseBlock != null ? realFalseBlock : endBlock;
-            new BrInst(b, b.reVar, level.get(j + 1), temp);
-            //为True遍历本层的下一个块，为false遍历下一层
-        }
-        BasicBlock b = level.get(level.size() - 1);
-        BasicBlock temp = this.realFalseBlock != null ? realFalseBlock : endBlock;
-        new BrInst(b, b.reVar, realTrueBlock, temp);
-        //以下，还需要填充realTrueBlock 和 realFalseBlock
-        new BrInst(realTrueBlock, endBlock);
-        if (realFalseBlock != null) {
-            new BrInst(realFalseBlock, endBlock);
-        }
-        this.clearRefill();
-    }
-
-    public void clearRefill() {
-        this.refillBasicBlocks = new ArrayList<>();
-        this.tempLevel = new ArrayList<>();
-        this.realTrueBlock = null;
-        this.realFalseBlock = null;
-        this.endBlock = null;
+    public void visitForStmt(ForStmt forStmt){
+        LVal lVal = forStmt.lVal;
+        Exp exp = forStmt.exp;
+        Value v = this.visitAddExp(exp.addExp);
+        this.storeLValWithValue(lVal, v);
     }
 
     public void visitStmtIf(StmtIf stmt) {
-        BasicBlock block0 = curFunction.getCurBasicBlock();
+//        this.inStmtIf = true;
+        RefillIf refillIf= new RefillIf();//获得独特的refill工具
         Cond cond = stmt.cond;
         LOrExp lOrExp = cond.exp;
         //根据cond生成代码放入block0
         //refill
         ArrayList<BasicBlock> zeroLevel = new ArrayList<>();
         zeroLevel.add(curFunction.getCurBasicBlock());
-        this.refillBasicBlocks.add(zeroLevel);
-        this.visitLOrExp(lOrExp);
+        refillIf.refillBasicBlocks.add(zeroLevel);
+        this.visitLOrExp(lOrExp,refillIf);
         //以下是管理Stmt
         curFunction.addBasicBlock();
         BasicBlock block1 = curFunction.getCurBasicBlock();
-        this.realTrueBlock = block1;//refill
+        refillIf.realTrueBlock = block1;//refill
         Stmt trueStmt = stmt.stmt;
         this.visitStmt(trueStmt);
         if (stmt.type == 1) {
             curFunction.addBasicBlock();
             BasicBlock block2 = curFunction.getCurBasicBlock();
-            this.realFalseBlock = block2;
+            refillIf.realFalseBlock = block2;
             Stmt falseStmt = stmt.elseStmt;
             this.visitStmt(falseStmt);
         }
         curFunction.addBasicBlock();
-        this.endBlock = curFunction.getCurBasicBlock();
+        refillIf.endBlock = curFunction.getCurBasicBlock();
         //之后的代码都放入空新block里
-        this.refill(); //回填
+        refillIf.refill(); //回填
+//        this.inStmtIf = false;
         //todo 如果endBlock是空的呢 符合llvm要求吗
     }
 
-    public void visitLOrExp(LOrExp exp) {
+    public void visitLOrExp(LOrExp exp, RefillUtil refillUtil) {
         for (int i = 0; i < exp.exps.size(); i++) {
             LAndExp lAndExp = exp.exps.get(i);
             //refill
-            tempLevel = new ArrayList<>();
-            this.visitLAndExp(lAndExp);
-            this.refillBasicBlocks.add(tempLevel);
+            if(refillUtil instanceof RefillIf){
+                RefillIf refillIf = (RefillIf)refillUtil;
+                refillIf.tempLevel = new ArrayList<>();
+                this.visitLAndExp(lAndExp,refillIf);
+                refillIf.refillBasicBlocks.add(refillIf.tempLevel);
+            } else {
+                //todo for
+                //todo visit andExp
+            }
         }
     }
 
-    public void visitLAndExp(LAndExp exp) {
+    public void visitLAndExp(LAndExp exp,RefillUtil refillUtil) {
         for (int i = 0; i < exp.exps.size(); i++) {
             EqExp eqExp = exp.exps.get(i);
-            this.visitEqExp(eqExp);
+            this.visitEqExp(eqExp,refillUtil);
         }
     }
 
-    public void visitEqExp(EqExp exp) {
+    public void visitEqExp(EqExp exp,RefillUtil refillUtil) {
         //每一个EqExp代表一个新的BasicBlock
         curFunction.addBasicBlock();
         BasicBlock b = curFunction.getCurBasicBlock();
-        this.tempLevel.add(b);//refill
+        if(refillUtil instanceof RefillIf){
+            RefillIf refillIf = (RefillIf) refillUtil;
+            refillIf.tempLevel.add(b);
+        } else {
+            //todo for
+        }
         Value result;//eqExp的结果
         if (exp.relExps.size() >= 2) {
             //有两个以上的RelExp
