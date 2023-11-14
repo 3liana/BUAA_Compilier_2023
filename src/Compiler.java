@@ -9,6 +9,7 @@ import middleend.Generator;
 import middleend.IRModule;
 
 public class Compiler {
+    private static boolean debugValueCalculation = false;
     public static void main(String[] args) throws IOException {
         File outputFile = new File("llvm_ir.txt");
         OutputStream fOut = new FileOutputStream(outputFile);
@@ -34,6 +35,10 @@ public class Compiler {
         System.out.println(llvm);
         byte[] llvmDataBytes = (llvm).getBytes();
         fOut.write(llvmDataBytes);
+        if(Compiler.debugValueCalculation){
+            //打印符号表 和对应的值
+            generator.tableList.debugValueCalculation();
+        }
     }
 
     private static void getTokens(BufferedReader br, ArrayList<Token> tokens) throws IOException {

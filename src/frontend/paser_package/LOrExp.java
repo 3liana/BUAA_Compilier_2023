@@ -3,7 +3,7 @@ package frontend.paser_package;
 import java.util.ArrayList;
 
 public class LOrExp {
-    private ArrayList<LAndExp> exps;
+    public ArrayList<LAndExp> exps;
     public LOrExp(LAndExp exp){
         this.exps = new ArrayList<>();
         this.exps.add(exp);

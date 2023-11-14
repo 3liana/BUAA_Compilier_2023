@@ -6,8 +6,9 @@ import java.util.ArrayList;
 
 //改写为右递归
 public class EqExp {
-    private ArrayList<RelExp> relExps;
-    private ArrayList<Token> tokens;//长度为relExps - 1
+    public ArrayList<RelExp> relExps;
+    public ArrayList<Token> tokens;//长度为relExps - 14
+    //Category 为EQL 或 NEQ
     public EqExp(RelExp relExp){
         this.relExps = new ArrayList<RelExp>();
         this.tokens = new ArrayList<Token>();

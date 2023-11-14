@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 //改写为右递归
 public class LAndExp {
-    private ArrayList<EqExp> exps;
+    public ArrayList<EqExp> exps;
     public LAndExp(EqExp exp){
         this.exps = new ArrayList<>();
         this.exps.add(exp);

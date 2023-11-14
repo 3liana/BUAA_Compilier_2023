@@ -16,6 +16,7 @@ public class CallInst extends Instruction {
         super(basicBlock);
         this.function = function;
         this.rParams = rParams;
+        this.runFunction();
     }
     public CallInst(BasicBlock basicBlock,Function function, ArrayList<Value> rParams,
                     Value result){
@@ -23,7 +24,15 @@ public class CallInst extends Instruction {
         this.function = function;
         this.rParams = rParams;
         this.result = result;
+        this.runFunction();
     }
+    public void runFunction(){
+        //深拷贝一个一模一样的function，只不过给形参setNum，然后深拷贝每一条指令，最后得到一个返回的
+        //VarValue的getNum()
+        //todo 考虑数据流
+        //todo
+    }
+
     public String getPrint(){
         String sResult = this.result == null ? "":this.result.getName() + " = ";
         //打印实参

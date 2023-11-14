@@ -14,6 +14,7 @@ public class LoadInst extends Instruction {
         super(basicBlock);
         this.result = result;
         this.fromValue = fromValue;
+        this.result.setNum(this.fromValue.getNum());
     }
     public String getPrint(){
         return result.getName() + " = load " + type +", " +

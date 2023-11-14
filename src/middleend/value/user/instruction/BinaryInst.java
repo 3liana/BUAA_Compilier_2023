@@ -20,6 +20,22 @@ public class BinaryInst extends Instruction {
         this.op1 = op1;
         this.op2 = op2;
         this.operator = operator;
+        switch (operator) {
+            case add:
+                this.result.setNum(this.op1.getNum() + this.op2.getNum());
+                break;
+            case sub:
+                this.result.setNum(this.op1.getNum() - this.op2.getNum());
+                break;
+            case mul:
+                this.result.setNum(this.op1.getNum() * this.op2.getNum());
+                break;
+            case sdiv:
+                this.result.setNum(this.op1.getNum() / this.op2.getNum());
+                break;
+            case srem:
+                this.result.setNum(this.op1.getNum() % this.op2.getNum());
+        }
     }
     public String getPrint(){
         //todo 确定输出格式

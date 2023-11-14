@@ -6,8 +6,8 @@ import java.util.ArrayList;
 
 //改写为右递归
 public class RelExp {
-    private ArrayList<AddExp> addExps;
-    private ArrayList<Token> tokens;//长度为addExps - 1
+    public ArrayList<AddExp> addExps;
+    public ArrayList<Token> tokens;//长度为addExps - 1
     public RelExp(AddExp addExp){
         this.addExps = new ArrayList<AddExp>();
         this.tokens = new ArrayList<Token>();

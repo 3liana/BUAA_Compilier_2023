@@ -1,4 +1,4 @@
-package middleend.value.user.instruction;
+package middleend.value.user.instruction.terminateInst;
 
 import middleend.Value;
 import middleend.type.Type;

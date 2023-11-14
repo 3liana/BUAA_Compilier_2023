@@ -92,10 +92,9 @@ public class Factory {
     }
     public int calLVal(LVal lVal){
         String name = lVal.ident.getName();
-        //查找符号表
-        //注意：需要在factory中直接计算出值的只有全局变量，所以只需要在全局变量中查找
-        Value value = this.tableList.foundDef(name);
-        return ((GlobalVar)value).getNum();
+        //查符号表
+        Value value = this.tableList.foundDef(name);//逐层查找
+        return value.getNum();
     }
     //build 针对llvm结构
 

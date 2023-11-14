@@ -4,6 +4,7 @@ import middleend.Value;
 import middleend.symbol.SymbolTable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class TableList {
     private ArrayList<SymbolTable> tables;
@@ -39,5 +40,18 @@ public class TableList {
         SymbolTable tableZero = this.tables.get(0);
         Value value = tableZero.symbols.get(name);
         return value;
+    }
+    public void debugValueCalculation(){
+        for(int i = 0;i < this.tables.size(); i++){
+            SymbolTable tb = this.tables.get(i);
+            HashMap<String, Value> map = tb.symbols;
+            for(Value v:map.values()){
+                StringBuilder sb = new StringBuilder();
+                sb.append(v.getTableName());
+                sb.append(" , ");
+                sb.append(v.getNum());
+                System.out.println(sb.toString());
+            }
+        }
     }
 }

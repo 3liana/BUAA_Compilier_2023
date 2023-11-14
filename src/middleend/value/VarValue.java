@@ -22,6 +22,7 @@ public class VarValue extends Value {
         this.type = 1;//在符号表中有对应的真正的名字
         this.tableName = tableName;
     }
+
     public String getTableName(){
         return tableName;
     }

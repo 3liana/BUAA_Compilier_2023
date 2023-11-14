@@ -11,7 +11,7 @@ public class GlobalVar extends User {
     private boolean isConst;
     private String name;//直接用全局变量的名字命名
     private Type type = new IntegerType(32);
-    private int num;
+//    private int num;
     String blank = " ";
 
     public GlobalVar(String name, boolean isConst, int num) {
@@ -29,10 +29,6 @@ public class GlobalVar extends User {
 
     public String getTableName() {
         return this.name;
-    }
-
-    public int getNum() {
-        return this.num;
     }
 
     public String getPrint() {

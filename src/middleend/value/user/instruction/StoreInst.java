@@ -14,6 +14,7 @@ public class StoreInst extends Instruction {
         super(basicBlock);
         this.fromValue = fromValue;
         this.toValue = toValue;
+        this.toValue.setNum(this.fromValue.getNum());
     }
     public String getPrint(){
         return "store " + type + " " + fromValue.getName() +", " +

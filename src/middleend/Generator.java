@@ -8,13 +8,15 @@ import middleend.type.*;
 import middleend.value.*;
 import middleend.value.user.*;
 import middleend.value.user.instruction.*;
+import middleend.value.user.instruction.terminateInst.BrInst;
+import middleend.value.user.instruction.terminateInst.RetInst;
 
 
 import java.util.ArrayList;
 
 public class Generator {
     private CompUnit compUnit;//语法分析生成的AST树
-    private TableList tableList;
+    public TableList tableList;
     private Function curFunction = null;//通过curFunction来获取虚拟寄存器的值
     private Factory factory;
     private IRModule irModule;
@@ -256,20 +258,6 @@ public class Generator {
             pre = result;
         }
         return pre;
-//        if(exp.mulExps.size() != 1){
-//            for(int i = 1; i < exp.mulExps.size();i++){
-//                Value temp = this.visitMulExp(exp.mulExps.get(i));
-//                int registerNum = curFunction.assignRegister();
-//                Value result = new VarValue(registerNum,false);
-//                if(exp.symbols.get(i) == 0){
-//                    new BinaryInst(curBasicBlock,result,pre,temp,Operator.ADD);
-//                } else {
-//                    new BinaryInst(curBasicBlock,result,pre,temp,Operator.SUB);
-//                }
-//                pre = result;
-//            }
-//        }
-
     }
 
     public Value visitMulExp(MulExp mulExp) {
@@ -334,30 +322,30 @@ public class Generator {
             } else {
                 //库函数
                 //1 getint() callInst
-                if(functionName.equals("getint")){
+                if (functionName.equals("getint")) {
                     int registerNum = curFunction.assignRegister();
                     VarValue var = new VarValue(registerNum, false);
-                    new LibraryCallInst(curBlock,1,var);
+                    new LibraryCallInst(curBlock, 1, var);
                     return var;
                 }
                 //2 printf() callInst
                 //不太符合定义 因为funcFParams里是一堆exp 而 printf需要formatString
-                return  new Value();
+                return new Value();
             }
         } else {
             //UnaryOp UnaryExp
             // + - 是与常数0做运算
             ConstValue zero = new ConstValue("0");
             Value v = this.visitUnaryExp(exp.unaryExp);
-            if(exp.unaryOp.op.getCategory() == Category.PLUS){
+            if (exp.unaryOp.op.getCategory() == Category.PLUS) {
                 int registerNum = curFunction.assignRegister();
                 VarValue var = new VarValue(registerNum, false);
-                new BinaryInst(curBlock,var,zero,v,Operator.add);
+                new BinaryInst(curBlock, var, zero, v, Operator.add);
                 return var;
-            } else if(exp.unaryOp.op.getCategory() == Category.MINU){
+            } else if (exp.unaryOp.op.getCategory() == Category.MINU) {
                 int registerNum = curFunction.assignRegister();
                 VarValue var = new VarValue(registerNum, false);
-                new BinaryInst(curBlock,var,zero,v,Operator.sub);
+                new BinaryInst(curBlock, var, zero, v, Operator.sub);
                 return var;
             } else {
                 //! NOT
@@ -411,7 +399,7 @@ public class Generator {
 
     public void visitStmtBC(StmtBC stmt) {
         //'break' ';' | 'continue' ';'
-        //todo 代码生成一会出现吗？
+        //todo 代码生成二
     }
 
     public void visitStmtBlock(StmtBlock stmt) {
@@ -430,8 +418,197 @@ public class Generator {
         //todo 代码生成二
     }
 
+    private ArrayList<ArrayList<BasicBlock>> refillBasicBlocks = new ArrayList<>();
+    private ArrayList<BasicBlock> tempLevel = new ArrayList<>();
+    private BasicBlock realTrueBlock = null;//if成立
+    private BasicBlock realFalseBlock = null;//if不成立
+    private BasicBlock endBlock = null;
+
+    public void refill() {
+        BasicBlock beforeIf = refillBasicBlocks.get(0).get(0);
+        //根据文法，肯定是至少有一层lAndExp存在的
+        BasicBlock ifBlock = refillBasicBlocks.get(1).get(0);
+        new BrInst(beforeIf, ifBlock);
+        for (int i = 1; i < refillBasicBlocks.size() - 1; i++) {
+            ArrayList<BasicBlock> level = refillBasicBlocks.get(i);//表示一个lAndExp
+            for (int j = 0; j < level.size() - 1; j++) {
+                //遍历第一个直到倒数第二个EqBlock块
+                BasicBlock b = level.get(j);
+                new BrInst(b, b.reVar, level.get(j + 1), refillBasicBlocks.get(i + 1).get(0));
+                //为True遍历本层的下一个块，为false遍历下一层
+            }
+            BasicBlock b = level.get(level.size() - 1);
+            new BrInst(b, b.reVar, realTrueBlock, refillBasicBlocks.get(i + 1).get(0));
+        }
+        //最后一个LOrExp
+        ArrayList<BasicBlock> level = refillBasicBlocks.get(refillBasicBlocks.size() - 1);
+        for (int j = 0; j < level.size() - 1; j++) {
+            //遍历第一个直到倒数第二个EqBlock块
+            BasicBlock b = level.get(j);
+            BasicBlock temp = this.realFalseBlock != null ? realFalseBlock : endBlock;
+            new BrInst(b, b.reVar, level.get(j + 1), temp);
+            //为True遍历本层的下一个块，为false遍历下一层
+        }
+        BasicBlock b = level.get(level.size() - 1);
+        BasicBlock temp = this.realFalseBlock != null ? realFalseBlock : endBlock;
+        new BrInst(b, b.reVar, realTrueBlock, temp);
+        //以下，还需要填充realTrueBlock 和 realFalseBlock
+        new BrInst(realTrueBlock, endBlock);
+        if (realFalseBlock != null) {
+            new BrInst(realFalseBlock, endBlock);
+        }
+        this.clearRefill();
+    }
+
+    public void clearRefill() {
+        this.refillBasicBlocks = new ArrayList<>();
+        this.tempLevel = new ArrayList<>();
+        this.realTrueBlock = null;
+        this.realFalseBlock = null;
+        this.endBlock = null;
+    }
+
     public void visitStmtIf(StmtIf stmt) {
-        //todo 代码生成二
+        BasicBlock block0 = curFunction.getCurBasicBlock();
+        Cond cond = stmt.cond;
+        LOrExp lOrExp = cond.exp;
+        //根据cond生成代码放入block0
+        //refill
+        ArrayList<BasicBlock> zeroLevel = new ArrayList<>();
+        zeroLevel.add(curFunction.getCurBasicBlock());
+        this.refillBasicBlocks.add(zeroLevel);
+        this.visitLOrExp(lOrExp);
+        //以下是管理Stmt
+        curFunction.addBasicBlock();
+        BasicBlock block1 = curFunction.getCurBasicBlock();
+        this.realTrueBlock = block1;//refill
+        Stmt trueStmt = stmt.stmt;
+        this.visitStmt(trueStmt);
+        if (stmt.type == 1) {
+            curFunction.addBasicBlock();
+            BasicBlock block2 = curFunction.getCurBasicBlock();
+            this.realFalseBlock = block2;
+            Stmt falseStmt = stmt.elseStmt;
+            this.visitStmt(falseStmt);
+        }
+        curFunction.addBasicBlock();
+        this.endBlock = curFunction.getCurBasicBlock();
+        //之后的代码都放入空新block里
+        this.refill(); //回填
+        //todo 如果endBlock是空的呢 符合llvm要求吗
+    }
+
+    public void visitLOrExp(LOrExp exp) {
+        for (int i = 0; i < exp.exps.size(); i++) {
+            LAndExp lAndExp = exp.exps.get(i);
+            //refill
+            tempLevel = new ArrayList<>();
+            this.visitLAndExp(lAndExp);
+            this.refillBasicBlocks.add(tempLevel);
+        }
+    }
+
+    public void visitLAndExp(LAndExp exp) {
+        for (int i = 0; i < exp.exps.size(); i++) {
+            EqExp eqExp = exp.exps.get(i);
+            this.visitEqExp(eqExp);
+        }
+    }
+
+    public void visitEqExp(EqExp exp) {
+        //每一个EqExp代表一个新的BasicBlock
+        curFunction.addBasicBlock();
+        BasicBlock b = curFunction.getCurBasicBlock();
+        this.tempLevel.add(b);//refill
+        Value result;//eqExp的结果
+        if (exp.relExps.size() >= 2) {
+            //有两个以上的RelExp
+            Value v1 = this.visitRelExp(exp.relExps.get(0));
+            Value v2 = this.visitRelExp(exp.relExps.get(1));
+            CondString condString = exp.tokens.get(0).getCategory() == Category.EQL ?
+                    CondString.eq : CondString.ne;
+            int registerNum = curFunction.assignRegister();
+            VarValue var = new VarValue(registerNum, false);
+            new IcmpInst(b, var, v1, v2, condString);
+            int i = 2, j = 1;
+            Value pre = var;
+            while (i <= exp.relExps.size() && j <= exp.tokens.size()) {
+                CondString tempCondString = exp.tokens.get(j).getCategory() == Category.EQL ?
+                        CondString.eq : CondString.ne;
+                Value v3 = this.visitRelExp(exp.relExps.get(i));
+                //分配结果寄存器
+                int tempRegisterNum = curFunction.assignRegister();
+                VarValue tempVar = new VarValue(tempRegisterNum, false);
+                //生成指令
+                new IcmpInst(b, tempVar, pre, v3, tempCondString);
+            }
+            result = pre;
+        } else {
+            //只有一个RelExp
+            result = this.visitRelExp(exp.relExps.get(0));
+        }
+        //将result 与 0 做 ne 比较
+        int r = curFunction.assignRegister();
+        VarValue reVar = new VarValue(r, false);
+        new IcmpInst(b, reVar, result, new ConstValue("0"), CondString.ne);
+        b.reVar = reVar;//refill
+    }
+
+    public Value visitRelExp(RelExp relExp) {
+        //< slt
+        //<= sle
+        //> sgt
+        //>= sge
+        BasicBlock b = curFunction.getCurBasicBlock();
+        if (relExp.addExps.size() >= 2) {
+            Value v1 = this.visitAddExp(relExp.addExps.get(0));
+            Value v2 = this.visitAddExp(relExp.addExps.get(1));
+            CondString condString = CondString.eq;//初始化为一个不可能的
+            switch (relExp.tokens.get(0).getCategory()) {
+                case LSS:
+                    condString = CondString.slt;
+                    break;
+                case LEQ:
+                    condString = CondString.sle;
+                    break;
+                case GRE:
+                    condString = CondString.sgt;
+                    break;
+                case GEQ:
+                    condString = CondString.sge;
+                    break;
+            }
+            int registerNum = curFunction.assignRegister();
+            VarValue var = new VarValue(registerNum, false);
+            new IcmpInst(b, var, v1, v2, condString);
+            int i = 2, j = 1;
+            Value pre = var;
+            while (i < relExp.addExps.size() && j < relExp.tokens.size()) {
+                Value v3 = this.visitAddExp(relExp.addExps.get(i));
+                CondString temp = CondString.eq;
+                switch (relExp.tokens.get(j).getCategory()) {
+                    case LSS:
+                        temp = CondString.slt;
+                        break;
+                    case LEQ:
+                        temp = CondString.sle;
+                        break;
+                    case GRE:
+                        temp = CondString.sgt;
+                        break;
+                    case GEQ:
+                        temp = CondString.sge;
+                        break;
+                }
+                int tempRegisterNum = curFunction.assignRegister();
+                VarValue tempVar = new VarValue(tempRegisterNum, false);
+                new IcmpInst(b, tempVar, pre, v3, temp);
+            }
+            return pre;
+        } else {
+            //只有一个AddExp
+            return this.visitAddExp(relExp.addExps.get(0));
+        }
     }
 
     public void visitStmtLValExp(StmtLValExp stmt) {
@@ -446,21 +623,21 @@ public class Generator {
         ArrayList<Exp> exps = stmt.exps;
         int j = 0;
         int i;
-        for(i=1;i<s.length() - 1;){
+        for (i = 1; i < s.length() - 1; ) {
             //第一个和最后一个字符是“
-            if(s.charAt(i) == '%'){
+            if (s.charAt(i) == '%') {
                 //%d
                 Value v = this.visitAddExp(exps.get(j).addExp);
                 j++;
-                new LibraryCallInst(curBasicBlock,3,v);
+                new LibraryCallInst(curBasicBlock, 3, v);
                 i++;
-            } else if(s.charAt(i) == '\\'){
+            } else if (s.charAt(i) == '\\') {
                 //\n
-                new LibraryCallInst(curBasicBlock,2,new ConstValue("10"));
+                new LibraryCallInst(curBasicBlock, 2, new ConstValue("10"));
                 i++;
-            } else{
+            } else {
                 int cAscii = s.charAt(i);
-                new LibraryCallInst(curBasicBlock,2,new ConstValue(String.valueOf(cAscii)));
+                new LibraryCallInst(curBasicBlock, 2, new ConstValue(String.valueOf(cAscii)));
             }
             i++;
         }
@@ -470,9 +647,9 @@ public class Generator {
         BasicBlock curBasicBlock = curFunction.getCurBasicBlock();
         LVal lVal = stmt.lVal;
         int registerNum = curFunction.assignRegister();
-        VarValue value = new VarValue(registerNum,false);
-        new LibraryCallInst(curBasicBlock,1,value);
-        this.storeLValWithValue(lVal,value);
+        VarValue value = new VarValue(registerNum, false);
+        new LibraryCallInst(curBasicBlock, 1, value);
+        this.storeLValWithValue(lVal, value);
     }
 
     private void storeLValWithValue(LVal lVal, Value value) {
