@@ -7,7 +7,7 @@ import middleend.value.user.BasicBlock;
 import middleend.value.user.Instruction;
 
 public class IcmpInst extends Instruction {
-    private Type ty = new IntegerType(32);
+    private Type ty = new IntegerType(32);//能进行>,<,>=,<=也只有i32
     private Value result;
     private Value v0;
     private Value v1;
@@ -15,6 +15,7 @@ public class IcmpInst extends Instruction {
     public IcmpInst(BasicBlock b,Value result,Value v0,Value v1,CondString cond){
         super(b);
         this.result = result;
+        this.result.setMyType(IntegerType.i1Type);
         this.v0 = v0;
         this.v1 = v1;
         this.cond = cond;

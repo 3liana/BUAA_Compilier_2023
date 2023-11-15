@@ -24,6 +24,7 @@ public class CallInst extends Instruction {
         this.function = function;
         this.rParams = rParams;
         this.result = result;
+        this.result.setMyType(function.returnType);
         this.runFunction();
     }
     public void runFunction(){
@@ -40,12 +41,12 @@ public class CallInst extends Instruction {
         int i;
         for (i = 0; i < this.rParams.size() - 1; i++) {
             Value v = this.rParams.get(i);
-            sParam.append(v.getType() + " " + v.getName());
+            sParam.append(v.getMyType() + " " + v.getName());
             sParam.append(" , ");
         }
         if(this.rParams.size() - 1 >= 0){
             Value v = this.rParams.get(this.rParams.size() - 1);
-            sParam.append(v.getType() + " " +v.getName());
+            sParam.append(v.getMyType() + " " +v.getName());
         }
         //打印指令
         return sResult + "call " + function.returnType + " " + function.getName()  + "(" +

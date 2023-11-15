@@ -1,8 +1,11 @@
 package middleend.type;
 
 public class PointerType implements Type{
-    private Type targetType;
-    public PointerType(Type type){
-        this.targetType = type;
+    public Type targetType;
+    public PointerType(Type targetType){
+        this.targetType = targetType;
+    }
+    public String toString(){
+        return this.targetType + "*";
     }
 }

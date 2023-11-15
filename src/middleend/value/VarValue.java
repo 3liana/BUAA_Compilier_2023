@@ -37,9 +37,9 @@ public class VarValue extends Value {
     public String getName(){
         return "%" + registerNum;
     }
-    public Type getType() {
-        return this.varType;
-    }
+//    public Type getType() {
+//        return this.varType;
+//    }
     public String getTableRegister(){
         return "%" + this.registerNum;
     }

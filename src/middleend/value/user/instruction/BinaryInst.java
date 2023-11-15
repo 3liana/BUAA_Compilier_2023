@@ -14,6 +14,7 @@ public class BinaryInst extends Instruction {
     private Value op2;
     private Operator operator;
     private Type type = new IntegerType(32);
+    //能进行加减乘除运算的只有32位，所以没关系
     public BinaryInst(BasicBlock block,Value result, Value op1, Value op2, Operator operator) {
         super(block);
         this.result = result;
@@ -38,7 +39,6 @@ public class BinaryInst extends Instruction {
         }
     }
     public String getPrint(){
-        //todo 确定输出格式
         return result.getName() + " = " + operator.toString()
                 + " " + type + " " + op1.getName() + " , " +
                 op2.getName() + "\n";

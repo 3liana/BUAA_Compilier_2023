@@ -4,7 +4,14 @@ import middleend.type.IntegerType;
 import middleend.type.Type;
 
 public class Value {
+    protected Type myType = null;
     protected int num = 0;
+    public Type getMyType(){
+        return this.myType;
+    }
+    public void setMyType(Type myType){
+        this.myType = myType;
+    }
     public String getName(){
         //在llvm中打印的名字
         //@a %1...
@@ -26,7 +33,7 @@ public class Value {
     public void setNum(int num){
         this.num = num;
     }
-    public Type getType() {
-        return new IntegerType(32);
-    }
+//    public Type getType() {
+//        return new IntegerType(32);
+//    }
 }

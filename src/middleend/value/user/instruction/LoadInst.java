@@ -2,6 +2,7 @@ package middleend.value.user.instruction;
 
 import middleend.Value;
 import middleend.type.IntegerType;
+import middleend.type.PointerType;
 import middleend.type.Type;
 import middleend.value.user.BasicBlock;
 import middleend.value.user.Instruction;
@@ -15,6 +16,11 @@ public class LoadInst extends Instruction {
         this.result = result;
         this.fromValue = fromValue;
         this.result.setNum(this.fromValue.getNum());
+
+        //fromValue的MyType一定是pointType
+        PointerType pointerType = (PointerType) fromValue.getMyType();
+        Type targetType = pointerType.targetType;
+        result.setMyType(targetType);
     }
     public String getPrint(){
         return result.getName() + " = load " + type +", " +
