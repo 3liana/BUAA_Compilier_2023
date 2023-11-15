@@ -6,6 +6,7 @@ import middleend.type.Type;
 
 public class VarValue extends Value {
     private int type;
+    private Type varType = new IntegerType(32);
     private int registerNum;
     public boolean isConst;
     public String tableName;
@@ -22,7 +23,14 @@ public class VarValue extends Value {
         this.type = 1;//在符号表中有对应的真正的名字
         this.tableName = tableName;
     }
-
+    public VarValue(int registerNum,boolean isConst,boolean isI1){
+        this.registerNum = registerNum;
+        this.isConst = isConst;
+        this.type = 0;//临时变量 在符号表中没有对应的真正的名字
+        if(isI1 ){
+            this.varType = new IntegerType(1);
+        }
+    }
     public String getTableName(){
         return tableName;
     }
@@ -30,7 +38,7 @@ public class VarValue extends Value {
         return "%" + registerNum;
     }
     public Type getType() {
-        return new IntegerType(32);
+        return this.varType;
     }
     public String getTableRegister(){
         return "%" + this.registerNum;

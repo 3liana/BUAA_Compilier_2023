@@ -4,7 +4,7 @@ import frontend.lexer_package.Token;
 import frontend.paser_package.Stmt;
 
 public class StmtBC extends Stmt {
-    private Token token;
+    public Token token;
     public StmtBC(Token token) {
         this.token = token;
     }

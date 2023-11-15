@@ -11,7 +11,7 @@ public class BrInst extends Instruction {
     private Value condValue;
     private Value ifTure;//BasicBlock
     private Value ifFalse;//BasicBlock
-    private Value dest;//BasicBlock
+    public Value dest;//BasicBlock
     public BrInst(BasicBlock b,Value condValue, Value ifTure, Value ifFalse){
         super(b);
         this.type = 0;
@@ -27,8 +27,9 @@ public class BrInst extends Instruction {
     public String getPrint(){
         if(this.type == 0){
             return "br i1 " + condValue.getName() +", label " + ifTure.getName()
-                    +", " + ifFalse.getName() + "\n";
+                    +", label " + ifFalse.getName() + "\n";
         } else {
+            //type = 1,应该必有dest才对？
             return "br label " + dest.getName() + "\n";
         }
     }

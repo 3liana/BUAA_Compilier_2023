@@ -3,6 +3,7 @@ package middleend;
 import frontend.lexer_package.Category;
 import frontend.paser_package.*;
 import frontend.paser_package.stmt_package.*;
+import middleend.refill.RefillFor;
 import middleend.refill.RefillIf;
 import middleend.refill.RefillUtil;
 import middleend.symbol.*;
@@ -10,6 +11,7 @@ import middleend.type.*;
 import middleend.value.*;
 import middleend.value.user.*;
 import middleend.value.user.instruction.*;
+import middleend.value.user.instruction.terminateInst.BrInst;
 import middleend.value.user.instruction.terminateInst.RetInst;
 
 
@@ -400,7 +402,21 @@ public class Generator {
 
     public void visitStmtBC(StmtBC stmt) {
         //'break' ';' | 'continue' ';'
-        //todo 代码生成二
+        RefillFor refillFor = this.forStacks.get(forStacks.size()-1);
+        if(stmt.token.getCategory() == Category.CONTINUETK){
+//            if(refillFor.forStmt2Block != null){
+//                //按照for的设计必有 但是可能在这个时候还没赋值
+//                new BrInst(curFunction.getCurBasicBlock(),refillFor.forStmt2Block);
+//            }
+            BrInst br = new BrInst(curFunction.getCurBasicBlock(),refillFor.forStmt2Block);
+            refillFor.dstAsForStmt2.add(br);
+            //refillFor.continues.add(curFunction.getCurBasicBlock());
+        } else {
+            //break;
+            BrInst br =new BrInst(curFunction.getCurBasicBlock(),refillFor.endBlock);
+            refillFor.dstAsEnd.add(br);
+//            refillFor.breaks.add(curFunction.getCurBasicBlock());
+        }
     }
 
     public void visitStmtBlock(StmtBlock stmt) {
@@ -414,22 +430,45 @@ public class Generator {
             this.visitAddExp(stmt.exp.addExp);
         }
     }
-    private boolean inStmtFor = false;
-    private boolean inStmtIf = false;
+    private ArrayList<RefillFor> forStacks = new ArrayList<>();
+    //通过这个在break和continue的时候找到所属的for语句块
     public void visitStmtFor(StmtFor stmtFor) {
-        //todo 代码生成二
         ForStmt forStmt1 = stmtFor.forStmt1;
         ForStmt forStmt2 = stmtFor.forStmt2;
         Cond cond = stmtFor.cond;
+        RefillFor refillFor = new RefillFor(cond!=null);
+        this.forStacks.add(refillFor);
         //以上都有可能是null
         Stmt stmt = stmtFor.stmt;
         //以上 解析出AST树的部分
         if(forStmt1 != null){
             this.visitForStmt(forStmt1);
         }
+        //refill
+        ArrayList<BasicBlock> zeroLevel = new ArrayList<>();
+        zeroLevel.add(curFunction.getCurBasicBlock());
+        refillFor.refillBasicBlocks.add(zeroLevel);
+        //以上 zerolevel
         if(cond != null){
-//            this.visitLOrExp(cond.exp);
+            this.visitLOrExp(cond.exp,refillFor);
         }
+
+        curFunction.addBasicBlock();
+        //决定由cond跳进来的dst
+        refillFor.realTrueBlock1 = curFunction.getCurBasicBlock();
+        this.visitStmt(stmt);
+        //决定跳走到end的from
+        refillFor.realTrueBlock2 = curFunction.getCurBasicBlock();//refill
+
+        curFunction.addBasicBlock();
+        refillFor.forStmt2Block = curFunction.getCurBasicBlock();//refill
+        if(forStmt2 != null){
+            this.visitForStmt(forStmt2);
+        }
+        curFunction.addBasicBlock();
+        refillFor.endBlock = curFunction.getCurBasicBlock();//refill
+        refillFor.refill();
+        this.forStacks.remove(forStacks.size()-1);//pop
     }
     public void visitForStmt(ForStmt forStmt){
         LVal lVal = forStmt.lVal;
@@ -452,8 +491,10 @@ public class Generator {
         //以下是管理Stmt
         curFunction.addBasicBlock();
         BasicBlock block1 = curFunction.getCurBasicBlock();
-        refillIf.realTrueBlock = block1;//refill
+        refillIf.realTrueBlock1 = block1;
         Stmt trueStmt = stmt.stmt;
+        refillIf.realTrueBlock2 = curFunction.getCurBasicBlock();//refill
+
         this.visitStmt(trueStmt);
         if (stmt.type == 1) {
             curFunction.addBasicBlock();
@@ -474,15 +515,9 @@ public class Generator {
         for (int i = 0; i < exp.exps.size(); i++) {
             LAndExp lAndExp = exp.exps.get(i);
             //refill
-            if(refillUtil instanceof RefillIf){
-                RefillIf refillIf = (RefillIf)refillUtil;
-                refillIf.tempLevel = new ArrayList<>();
-                this.visitLAndExp(lAndExp,refillIf);
-                refillIf.refillBasicBlocks.add(refillIf.tempLevel);
-            } else {
-                //todo for
-                //todo visit andExp
-            }
+            refillUtil.tempLevel = new ArrayList<>();
+            this.visitLAndExp(lAndExp,refillUtil);
+            refillUtil.refillBasicBlocks.add(refillUtil.tempLevel);
         }
     }
 
@@ -497,12 +532,7 @@ public class Generator {
         //每一个EqExp代表一个新的BasicBlock
         curFunction.addBasicBlock();
         BasicBlock b = curFunction.getCurBasicBlock();
-        if(refillUtil instanceof RefillIf){
-            RefillIf refillIf = (RefillIf) refillUtil;
-            refillIf.tempLevel.add(b);
-        } else {
-            //todo for
-        }
+        refillUtil.tempLevel.add(b);
         Value result;//eqExp的结果
         if (exp.relExps.size() >= 2) {
             //有两个以上的RelExp
@@ -511,19 +541,29 @@ public class Generator {
             CondString condString = exp.tokens.get(0).getCategory() == Category.EQL ?
                     CondString.eq : CondString.ne;
             int registerNum = curFunction.assignRegister();
-            VarValue var = new VarValue(registerNum, false);
-            new IcmpInst(b, var, v1, v2, condString);
+            VarValue var1 = new VarValue(registerNum, false,true);
+            new IcmpInst(b, var1, v1, v2, condString);
+            registerNum = curFunction.assignRegister();
+            VarValue var32 = new VarValue(registerNum,false);
+            new ZextInst(b,var32,var1);
             int i = 2, j = 1;
-            Value pre = var;
-            while (i <= exp.relExps.size() && j <= exp.tokens.size()) {
+            Value pre = var32;
+            while (i < exp.relExps.size() && j < exp.tokens.size()) {
                 CondString tempCondString = exp.tokens.get(j).getCategory() == Category.EQL ?
                         CondString.eq : CondString.ne;
                 Value v3 = this.visitRelExp(exp.relExps.get(i));
                 //分配结果寄存器
                 int tempRegisterNum = curFunction.assignRegister();
-                VarValue tempVar = new VarValue(tempRegisterNum, false);
+                VarValue tempVar1 = new VarValue(tempRegisterNum, false,true);
                 //生成指令
-                new IcmpInst(b, tempVar, pre, v3, tempCondString);
+                new IcmpInst(b, tempVar1, pre, v3, tempCondString);
+                tempRegisterNum = curFunction.assignRegister();
+                VarValue tempVar32 = new VarValue(tempRegisterNum, false);
+                new ZextInst(b,tempVar32,tempVar1);
+                pre = tempVar32;
+                //
+                i++;
+                j++;
             }
             result = pre;
         } else {
@@ -532,7 +572,7 @@ public class Generator {
         }
         //将result 与 0 做 ne 比较
         int r = curFunction.assignRegister();
-        VarValue reVar = new VarValue(r, false);
+        VarValue reVar = new VarValue(r, false,true);
         new IcmpInst(b, reVar, result, new ConstValue("0"), CondString.ne);
         b.reVar = reVar;//refill
     }
@@ -562,10 +602,13 @@ public class Generator {
                     break;
             }
             int registerNum = curFunction.assignRegister();
-            VarValue var = new VarValue(registerNum, false);
-            new IcmpInst(b, var, v1, v2, condString);
+            VarValue var1 = new VarValue(registerNum, false,true);
+            new IcmpInst(b, var1, v1, v2, condString);
+            registerNum = curFunction.assignRegister();
+            VarValue var32 = new VarValue(registerNum,false);
+            new ZextInst(b,var32,var1);
             int i = 2, j = 1;
-            Value pre = var;
+            Value pre = var32;
             while (i < relExp.addExps.size() && j < relExp.tokens.size()) {
                 Value v3 = this.visitAddExp(relExp.addExps.get(i));
                 CondString temp = CondString.eq;
@@ -584,8 +627,15 @@ public class Generator {
                         break;
                 }
                 int tempRegisterNum = curFunction.assignRegister();
-                VarValue tempVar = new VarValue(tempRegisterNum, false);
-                new IcmpInst(b, tempVar, pre, v3, temp);
+                VarValue tempVar1 = new VarValue(tempRegisterNum, false,true);
+                new IcmpInst(b, tempVar1, pre, v3, temp);
+                tempRegisterNum = curFunction.assignRegister();
+                VarValue tempVar32 = new VarValue(tempRegisterNum,false);
+                new ZextInst(b,tempVar32,tempVar1);
+                pre = tempVar32;
+                //
+                i++;
+                j++;
             }
             return pre;
         } else {

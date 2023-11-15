@@ -21,7 +21,7 @@ public class StmtFor extends Stmt{
         this.type = this.type | 0b010;
     }
     public void addFor2(ForStmt stmt){
-        this.forStmt1 = stmt;
+        this.forStmt2 = stmt;
         this.type = this.type | 0b001;
     }
 }

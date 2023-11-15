@@ -7,7 +7,7 @@ import middleend.value.user.BasicBlock;
 import middleend.value.user.Instruction;
 
 public class IcmpInst extends Instruction {
-    private Type ty = new IntegerType(1);
+    private Type ty = new IntegerType(32);
     private Value result;
     private Value v0;
     private Value v1;
