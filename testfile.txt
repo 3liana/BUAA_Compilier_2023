@@ -1,16 +1,4 @@
-int a;
 int main(){
-    int i;
-    int k = 0;
-    for(i=3;;i=i+3){
-        k = k + 1;
-        if(i%2==1){
-        continue;
-        }
-        printf("round %d: %d\n",k,i);
-        if(i>19){
-            break;
-        }
-    }
+    const int a[3][2] = {{1,2},{3,4},{5 + 1,7}};
     return 0;
 }

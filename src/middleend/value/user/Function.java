@@ -62,10 +62,14 @@ public class Function extends User {
         return "@" + this.name;
     }
     public void addFirstBasicBlock() {
-        this.basicBlocks.add(new BasicBlock(this.assignRegister(),true));
+        BasicBlock b = new BasicBlock(this.assignRegister(),true);
+        this.basicBlocks.add(b);
+        b.belongFunction = this;
     }
     public void addBasicBlock(){
-        this.basicBlocks.add(new BasicBlock(this.assignRegister(),false));
+        BasicBlock b = new BasicBlock(this.assignRegister(),false);
+        this.basicBlocks.add(b);
+        b.belongFunction = this;
     }
     public BasicBlock getCurBasicBlock() {
         return this.basicBlocks.get(this.basicBlocks.size() - 1);
@@ -88,12 +92,12 @@ public class Function extends User {
         int i;
         for (i = 0; i < this.params.size() - 1; i++) {
             Value v = this.params.get(i);
-            sParam.append(v.getType() + " " + v.getName());
+            sParam.append(v.getMyType() + " " + v.getName());
             sParam.append(" , ");
         }
         if(this.params.size() - 1 >= 0){
             Value v = this.params.get(this.params.size() - 1);
-            sParam.append(v.getType() + " " +v.getName());
+            sParam.append(v.getMyType() + " " +v.getName());
         }
         String s0 = "define" + blank + this.returnType + blank
                 + "@" + this.name + "(" + sParam +

@@ -11,6 +11,7 @@ public class BasicBlock extends Value {
     public ArrayList<Instruction> instructions;
     public Value reVar = null;//为回填设计
     private  boolean hasTerInst = false;
+    public Function belongFunction;
     public BasicBlock() {
         //为callInst里的tempBlock而设置
     }

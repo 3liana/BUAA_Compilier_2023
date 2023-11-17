@@ -5,6 +5,8 @@ import frontend.paser_package.ConstExp;
 import middleend.symbol.TableList;
 import middleend.value.GlobalVar;
 
+import java.util.ArrayList;
+
 public class Factory {
     //负责辅助Generator 提供一些功能
     private TableList tableList;
@@ -22,6 +24,35 @@ public class Factory {
 //        return this.registerNum++;
 //    }
     // 计算方面
+    public ArrayList<ArrayList<Integer>> calArrayConstInitVal(ConstInitVal constInitVal){
+        ArrayList<ArrayList<Integer>> returnArray = new ArrayList<>();
+        //todo
+        //调用此函数
+        //不可能为0 即只有一个数组的情况
+        if(constInitVal.type == 1){
+            //为空 todo
+        } else {
+            ConstInitVal temp = constInitVal.initVals.get(0);
+            if(temp.type == 0){
+                //一维数组
+                ArrayList<Integer> array = new ArrayList<>();
+                for(ConstInitVal initVal:constInitVal.initVals){
+                    array.add(this.calConstExp(initVal.exp));
+                }
+                returnArray.add(array);
+            } else {
+                //1,2:二维数组
+                for(ConstInitVal initVal:constInitVal.initVals){
+                    ArrayList<Integer> array = new ArrayList<>();
+                    for(ConstInitVal inside: initVal.initVals){
+                        array.add(this.calConstExp(inside.exp));
+                    }
+                    returnArray.add(array);
+                }
+            }
+        }
+        return returnArray;
+    }
     public int calConstExp(ConstExp constExp) {
         return this.calAddExp(constExp.addExp);
     }

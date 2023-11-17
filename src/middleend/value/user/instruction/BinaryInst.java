@@ -21,6 +21,7 @@ public class BinaryInst extends Instruction {
         this.op1 = op1;
         this.op2 = op2;
         this.operator = operator;
+        this.result.setMyType(IntegerType.i32Type);
         switch (operator) {
             case add:
                 this.result.setNum(this.op1.getNum() + this.op2.getNum());
