@@ -29,7 +29,7 @@ public class Factory {
         //调用此函数
         //不可能为0 即只有一个数组的情况
         if(constInitVal.type == 1){
-            //为空 todo
+            return null;
         } else {
             ConstInitVal temp = constInitVal.initVals.get(0);
             if(temp.type == 0){
@@ -57,7 +57,7 @@ public class Factory {
         //调用此函数
         //不可能为0 即只有一个数组的情况
         if(initVal.type == 1){
-            //为空 todo
+            return null;
         } else {
             InitVal temp = initVal.initVals.get(0);
             if(temp.type == 0){

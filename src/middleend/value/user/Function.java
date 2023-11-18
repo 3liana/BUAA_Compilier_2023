@@ -104,10 +104,13 @@ public class Function extends User {
             if(preBlock.instructions.size() == 0){
                 new BrInst(preBlock,b);
             }
+            if(!preBlock.hasTerInst){
+                new BrInst(preBlock,b);
+            }
             preBlock = b;
-//            if(preBlock.registerNum == 33){
-//                System.out.println("debug");
-//            }
+            if(preBlock.registerNum == 76){
+                System.out.println("debug");
+            }
         }
         //todo 如果最后一个block为空
     }
@@ -116,7 +119,7 @@ public class Function extends User {
     }
 
     public int assignRegister() {
-        if(this.registerNum == 19){
+        if(this.registerNum == 39){
             System.out.println("debug");
         }
         return this.registerNum++;

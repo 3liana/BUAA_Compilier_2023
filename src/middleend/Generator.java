@@ -249,12 +249,13 @@ public class Generator {
             }
             if (this.isGlobal) {
                 ArrayList<ArrayList<Integer>> initValNums;
-                if(varDef.initVal != null){
-                    InitVal initVal = varDef.initVal;initValNums = factory.calArrayInitVal(initVal);
+                if (varDef.initVal != null) {
+                    InitVal initVal = varDef.initVal;
+                    initValNums = factory.calArrayInitVal(initVal);
                 } else {
-                    if(((SureArrayType) tempType).type == 0){
-                        ArrayList<Integer> zeroLevel= new ArrayList<Integer>();
-                        for(int i = 0;i<((SureArrayType) tempType).n;i++){
+                    if (((SureArrayType) tempType).type == 0) {
+                        ArrayList<Integer> zeroLevel = new ArrayList<Integer>();
+                        for (int i = 0; i < ((SureArrayType) tempType).n; i++) {
                             zeroLevel.add(0);
                         }
                         initValNums = new ArrayList<>();
@@ -263,9 +264,9 @@ public class Generator {
                         int n = ((SureArrayType) tempType).n;
                         int m = ((SureArrayType) tempType).m;
                         initValNums = new ArrayList<>();
-                        for(int i = 0;i<n;i++){
+                        for (int i = 0; i < n; i++) {
                             ArrayList<Integer> level = new ArrayList<>();
-                            for(int j = 0;j<m;j++){
+                            for (int j = 0; j < m; j++) {
                                 level.add(0);
                             }
                             initValNums.add(level);
@@ -285,10 +286,12 @@ public class Generator {
                 //下面是计算初始值的地方
                 //1.计算出地址
                 //2.store
-                if (((SureArrayType) tempType).type == 0) {//一维数组
-                    this.visitArrayInitVal1(varDef.initVal, var, (SureArrayType) tempType);
-                } else {//二维数组
-                    this.visitArrayInitVal2(varDef.initVal, var, (SureArrayType) tempType);
+                if(varDef.initVal != null){
+                    if (((SureArrayType) tempType).type == 0) {//一维数组
+                        this.visitArrayInitVal1(varDef.initVal, var, (SureArrayType) tempType);
+                    } else {//二维数组
+                        this.visitArrayInitVal2(varDef.initVal, var, (SureArrayType) tempType);
+                    }
                 }
             }
         }
@@ -490,12 +493,12 @@ public class Generator {
                 new BinaryInst(curBlock, var, zero, v, Operator.sub);
                 return var;
             } else {
-                //! todo NOT
+                //!NOT
                 int registerNum = curFunction.assignRegister();
-                VarValue var = new VarValue(registerNum, false,true);
-                new IcmpInst(curBlock,var,v,zero,CondString.eq);
+                VarValue var = new VarValue(registerNum, false, true);
+                new IcmpInst(curBlock, var, v, zero, CondString.eq);
                 VarValue var2 = this.assignTempVarValue();
-                new ZextInst(curBlock,var2,var);
+                new ZextInst(curBlock, var2, var);
                 return var2;
             }
         }
@@ -563,44 +566,43 @@ public class Generator {
                 Value n = this.visitAddExp(lVal.exps.get(0).addExp);
                 Value m = this.visitAddExp(lVal.exps.get(1).addExp);
                 VarValue v0 = this.assignTempVarValue();
-                new GetPtrInstSureArray(curBasicBlock, v0, defedValue, n,m);
+                new GetPtrInstSureArray(curBasicBlock, v0, defedValue, n, m);
                 VarValue v1 = this.assignTempVarValue();
-                new LoadInst(curBasicBlock,v1,v0);
+                new LoadInst(curBasicBlock, v1, v0);
                 return v1;
             }
         } else {
             //lVal是形参数组
             //targetType是Pointer
-            //todo
             int len = lVal.exps.size();
-            Type targetTypeInside = ((PointerType)targetType).targetType;
-            if (len == 0){
+            Type targetTypeInside = ((PointerType) targetType).targetType;
+            if (len == 0) {
                 //形参它自己 退掉pointer
                 //load
                 VarValue v0 = this.assignTempVarValue();
-                new LoadInst(curBasicBlock,v0,defedValue);
+                new LoadInst(curBasicBlock, v0, defedValue);
                 return v0;
-            } else if(len == 1){
+            } else if (len == 1) {
                 //形参的第一维
                 //一维数组 load出(Pointer(Integer)) +
                 // getPtr n（不是SureArray,没有第一个0*（等于不退层）)
                 // + load出i32
                 Value n = this.visitAddExp(lVal.exps.get(0).addExp);
-                if(targetTypeInside instanceof IntegerType){
+                if (targetTypeInside instanceof IntegerType) {
                     VarValue v0 = this.assignTempVarValue();
                     new LoadInst(curBasicBlock, v0, defedValue);
                     VarValue v1 = this.assignTempVarValue();//*i32
-                    new GetPtrNormal(curBasicBlock,v1,v0,n);
-                    VarValue v2= this.assignTempVarValue();
-                    new LoadInst(curBasicBlock,v2,v1);
+                    new GetPtrNormal(curBasicBlock, v1, v0, n);
+                    VarValue v2 = this.assignTempVarValue();
+                    new LoadInst(curBasicBlock, v2, v1);
                     return v2;
                 } else {
                     VarValue v0 = this.assignTempVarValue();
                     new LoadInst(curBasicBlock, v0, defedValue);
                     VarValue v1 = this.assignTempVarValue();//[n*i32]*
-                    new GetPtrNormal(curBasicBlock,v1,v0,n);
-                    VarValue v2= this.assignTempVarValue();
-                    new GetPtrInstSureArray(curBasicBlock,v2,v1,0);
+                    new GetPtrNormal(curBasicBlock, v1, v0, n);
+                    VarValue v2 = this.assignTempVarValue();
+                    new GetPtrInstSureArray(curBasicBlock, v2, v1, 0);
                     return v2;
                 }
                 //二维数组 load出(Pointer(nxi32SureArray)) +
@@ -613,12 +615,12 @@ public class Generator {
                 VarValue v0 = this.assignTempVarValue();
                 new LoadInst(curBasicBlock, v0, defedValue);
                 VarValue v1 = this.assignTempVarValue();//[m*i32]*
-                new GetPtrNormal(curBasicBlock,v1,v0,n);
-                VarValue v2= this.assignTempVarValue();
-                new GetPtrInstSureArray(curBasicBlock,v2,v1,m);
+                new GetPtrNormal(curBasicBlock, v1, v0, n);
+                VarValue v2 = this.assignTempVarValue();
+                new GetPtrInstSureArray(curBasicBlock, v2, v1, m);
                 VarValue v3 = this.assignTempVarValue();
-                new LoadInst(curBasicBlock,v3,v2);
-                return  v3;
+                new LoadInst(curBasicBlock, v3, v2);
+                return v3;
             }
         }
 //        return new Value();
@@ -708,9 +710,6 @@ public class Generator {
         if (forStmt2 != null) {
             this.visitForStmt(forStmt2);
         } else {
-            //todo 空stmt2跳到cond（如果有）
-            //跳到Stmt（如果没有cond)
-
         }
         curFunction.addBasicBlock();
         refillFor.endBlock = curFunction.getCurBasicBlock();//refill
@@ -756,7 +755,6 @@ public class Generator {
         //之后的代码都放入空新block里
         refillIf.refill(); //回填
 //        this.inStmtIf = false;
-        //todo 如果endBlock是空的呢 符合llvm要求吗
     }
 
     public void visitLOrExp(LOrExp exp, RefillUtil refillUtil) {
@@ -934,29 +932,54 @@ public class Generator {
     }
 
     private void storeLValWithValue(LVal lVal, Value value) {
-        //todo 不一样
         //lVal在左边
         //与visitLVal那种lVal在右边需要被读取的感觉不一样
         BasicBlock curBasicBlock = curFunction.getCurBasicBlock();
         Value foundDef = this.tableList.foundDef(lVal.ident.getName());
         Value toValue = foundDef;
-        Type targetType = ((PointerType)toValue.getMyType()).targetType;
-        if(!(targetType instanceof IntegerType)){
+        Type targetType = ((PointerType) toValue.getMyType()).targetType;
+        if (!(targetType instanceof IntegerType)) {
             //数组
-            int len = lVal.exps.size();
-            if(len == 1){
-                //a[1] = value
-                Value n = this.visitAddExp(lVal.exps.get(0).addExp);
-                VarValue v0 = this.assignTempVarValue();
-                new GetPtrInstSureArray(curBasicBlock,v0,foundDef,n);
-                toValue = v0;
+            if(targetType instanceof SureArrayType){
+                //实在的
+                int len = lVal.exps.size();
+                if (len == 1) {
+                    //a[1] = value
+                    Value n = this.visitAddExp(lVal.exps.get(0).addExp);
+                    VarValue v0 = this.assignTempVarValue();
+                    new GetPtrInstSureArray(curBasicBlock, v0, foundDef, n);
+                    toValue = v0;
+                } else {
+                    //a[2] = value
+                    Value n = this.visitAddExp(lVal.exps.get(0).addExp);
+                    Value m = this.visitAddExp(lVal.exps.get(1).addExp);
+                    VarValue v0 = this.assignTempVarValue();
+                    new GetPtrInstSureArray(curBasicBlock, v0, foundDef, n, m);
+                    toValue = v0;
+                }
             } else {
-                //a[2] = value
-                Value n = this.visitAddExp(lVal.exps.get(0).addExp);
-                Value m = this.visitAddExp(lVal.exps.get(1).addExp);
-                VarValue v0 = this.assignTempVarValue();
-                new GetPtrInstSureArray(curBasicBlock,v0,foundDef,n,m);
-                toValue = v0;
+                // 形参数组
+                int len = lVal.exps.size();
+                if(len == 1){
+                    //a[n]
+                    Value n = this.visitAddExp(lVal.exps.get(0).addExp);
+                    VarValue v0 = this.assignTempVarValue();
+                    new LoadInst(curBasicBlock,v0,foundDef);
+                    VarValue v1 = this.assignTempVarValue();
+                    new GetPtrNormal(curBasicBlock,v1,v0,n);
+                    toValue = v1;
+                } else {
+                    //len == 2
+                    Value n = this.visitAddExp(lVal.exps.get(0).addExp);
+                    Value m = this.visitAddExp(lVal.exps.get(1).addExp);
+                    VarValue v0 = this.assignTempVarValue();
+                    new LoadInst(curBasicBlock,v0,foundDef);
+                    VarValue v1 = this.assignTempVarValue();
+                    new GetPtrNormal(curBasicBlock,v1,v0,n);
+                    VarValue v2 = this.assignTempVarValue();
+                    new GetPtrInstSureArray(curBasicBlock,v2,v1,m);
+                    toValue = v2;
+                }
             }
             //toValue = this.visitLVal(lVal);
         }

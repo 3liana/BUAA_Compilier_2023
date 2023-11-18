@@ -16,6 +16,7 @@ public class GlobalVar extends User {
     private int type;//0 0维
     private Type targetType;
     private ArrayList<ArrayList<Integer>> initValNums;
+    private boolean ax2AllZero = true;
 
     public GlobalVar(String name, boolean isConst, int num) {
         this.name = name;
@@ -52,48 +53,68 @@ public class GlobalVar extends User {
             return this.getName() + blank + "=" + blank + s0 + blank + this.targetType + blank + this.num + "\n";
         } else {
             StringBuilder sb = new StringBuilder();
-            //数组  myType必是GlobalArrayType
-            SureArrayType targetType = (SureArrayType) this.targetType;
-            if(targetType.type == 0){
-                //一维数组
-                ArrayList<Integer> level= this.initValNums.get(0);
-                this.appendLevel(sb,level);
+            if(this.initValNums == null){
+                sb.append("zeroinitializer");
             } else {
-                //二维数组
-                sb.append("[");
-                SureArrayType insideType = new SureArrayType(targetType.m);
+                SureArrayType targetType = (SureArrayType) this.targetType;
+                if(targetType.type == 0){
+                    //一维数组
+                    ArrayList<Integer> level= this.initValNums.get(0);
+                    this.appendLevel(sb,level);
+                } else {
+                    //二维数组
+                    sb.append("[");
+                    SureArrayType insideType = new SureArrayType(targetType.m);
 
-                for(int i = 0;i<this.initValNums.size()-1;i++){
-                    ArrayList<Integer> level= this.initValNums.get(i);
-                    sb.append(insideType + " ");
-                    this.appendLevel(sb,level);
-                    sb.append(",");
+                    for(int i = 0;i<this.initValNums.size()-1;i++){
+                        ArrayList<Integer> level= this.initValNums.get(i);
+                        sb.append(insideType + " ");
+                        this.appendLevel(sb,level);
+                        sb.append(",");
+                    }
+                    if(this.initValNums.size()>=1){
+                        ArrayList<Integer> level= this.initValNums.get(
+                                this.initValNums.size() - 1
+                        );
+                        sb.append(insideType + " ");
+                        this.appendLevel(sb,level);
+                    }
+                    sb.append("]");
+                    if(this.ax2AllZero){
+                        sb = new StringBuilder();
+                        sb.append("zeroinitializer");
+                    }
                 }
-                if(this.initValNums.size()>=1){
-                    ArrayList<Integer> level= this.initValNums.get(
-                            this.initValNums.size() - 1
-                    );
-                    sb.append(insideType + " ");
-                    this.appendLevel(sb,level);
-                }
-                sb.append("]");
             }
+            //数组  myType必是GlobalArrayType
             return this.getName() + blank + "=" + blank + s0 + blank + this.targetType + blank +
                     sb + "\n";
         }
     }
     private void appendLevel(StringBuilder sb, ArrayList<Integer> level){
-        //todo 如果全0则增加 zeroinitializer
-        sb.append("[");
-        for(int i=0;i<level.size()-1;i++){
-            sb.append("i32 " + level.get(i));
-            sb.append(",");
+        //则增加 zeroinitializer
+        boolean allZero = true;
+        for(int i = 0;i < level.size();i++){
+            if(level.get(i) != 0 ){
+                allZero = false;
+            }
         }
-        if(level.size() >= 1){
-            sb.append("i32 " + level.get(
-                    level.size()-1)
-            );
+        if(!allZero){
+            this.ax2AllZero = false;
+            sb.append("[");
+            for(int i=0;i<level.size()-1;i++){
+                sb.append("i32 " + level.get(i));
+                sb.append(",");
+            }
+            if(level.size() >= 1){
+                sb.append("i32 " + level.get(
+                        level.size()-1)
+                );
+            }
+            sb.append("]");
+        } else {
+            sb.append("zeroinitializer");
         }
-        sb.append("]");
+
     }
 }
