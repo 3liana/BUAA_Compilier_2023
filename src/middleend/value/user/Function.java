@@ -12,6 +12,7 @@ import middleend.value.User;
 import middleend.value.VarValue;
 import middleend.value.user.instruction.AllocaInst;
 import middleend.value.user.instruction.StoreInst;
+import middleend.value.user.instruction.terminateInst.BrInst;
 
 import java.util.ArrayList;
 
@@ -88,15 +89,36 @@ public class Function extends User {
         b.belongFunction = this;
     }
     public void addBasicBlock(){
+        BasicBlock preBlock = this.getCurBasicBlock();
         BasicBlock b = new BasicBlock(this.assignRegister(),false);
         this.basicBlocks.add(b);
         b.belongFunction = this;
+//        if(preBlock.instructions.size() == 0){
+//            new BrInst(preBlock,b);
+//        }
+    }
+    public void fillBlock(){
+        BasicBlock preBlock = this.basicBlocks.get(0);
+        for(int i = 1;i<this.basicBlocks.size();i++){
+            BasicBlock b = this.basicBlocks.get(i);
+            if(preBlock.instructions.size() == 0){
+                new BrInst(preBlock,b);
+            }
+            preBlock = b;
+//            if(preBlock.registerNum == 33){
+//                System.out.println("debug");
+//            }
+        }
+        //todo 如果最后一个block为空
     }
     public BasicBlock getCurBasicBlock() {
         return this.basicBlocks.get(this.basicBlocks.size() - 1);
     }
 
     public int assignRegister() {
+        if(this.registerNum == 19){
+            System.out.println("debug");
+        }
         return this.registerNum++;
     }
 

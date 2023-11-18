@@ -34,16 +34,18 @@ public class RefillFor extends RefillUtil {
         super.refill();//cond
         //如果存在forStmt2Block就跳进去
         //如果不存在就直接跳到cond
-        if(this.forStmt2Block != null){
-            new BrInst(realTrueBlock2,forStmt2Block);
-        } else {
-            if(this.hasCond){
-                new BrInst(realTrueBlock2,refillBasicBlocks.get(1).get(0));
-            } else {
-                new BrInst(realTrueBlock2,realTrueBlock1);
-            }
-            return;//也不用考虑后面forStmt2Block怎么跳了
-        }
+        new BrInst(realTrueBlock2,forStmt2Block);
+//        if(this.forStmt2Block != null){
+//            new BrInst(realTrueBlock2,forStmt2Block);
+//        } else {
+//            if(this.hasCond){
+//                new BrInst(realTrueBlock2,refillBasicBlocks.get(1).get(0));
+//            } else {
+//                new BrInst(realTrueBlock2,realTrueBlock1);
+//            }
+//            return;//也不用考虑后面forStmt2Block怎么跳了
+//        }
+
         //如果cond存在跳IfBlock
         //如果cond不存在直接跳realTrueBlock
         if(this.hasCond){

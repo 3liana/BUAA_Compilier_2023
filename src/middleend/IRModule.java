@@ -28,6 +28,11 @@ public class IRModule {
         this.mainFunction = function;
     }
     public String getPrint(){
+        for(Function f:this.functions){
+            //不得已之举，要在最后发生
+            f.fillBlock();
+        }
+        this.mainFunction.fillBlock();
         String library = "declare i32 @getint()\n" +
                 "declare void @putint(i32)\n" +
                 "declare void @putch(i32)\n" +

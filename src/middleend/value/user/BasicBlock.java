@@ -10,6 +10,7 @@ public class BasicBlock extends Value {
     public int registerNum;
     public ArrayList<Instruction> instructions;
     public Value reVar = null;//为回填设计
+    private Instruction terInst = null;
     private  boolean hasTerInst = false;
     public Function belongFunction;
     public BasicBlock() {
@@ -27,9 +28,21 @@ public class BasicBlock extends Value {
                 //只有本块中无终结指令才可以加入
                 this.instructions.add(inst);
                 this.hasTerInst = true;
+                this.terInst = inst;
             }
         } else {
-            this.instructions.add(inst);
+            //对非终结指令
+//            if(this.hasTerInst){
+//                int index = this.instructions.indexOf(this.terInst);
+//                this.instructions.remove(index);
+//                this.instructions.add(index,inst);
+//                this.instructions.add(this.terInst);
+//            } else {
+//                this.instructions.add(inst);
+//            }
+            if(!this.hasTerInst){
+                this.instructions.add(inst);
+            }
         }
 
     }

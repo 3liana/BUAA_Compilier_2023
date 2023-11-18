@@ -39,10 +39,7 @@ public class Generator {
     public SymbolTable getCurTable() {
         return this.tableList.getCurSymbolTable();
     }
-    private VarValue assignTempVarValue() {
-        int registerNum = curFunction.assignRegister();
-        return new VarValue(registerNum, false);
-    }
+
     //开始visit AST
     public void visitCompUnit() {
         this.tableList.addTable();//0层
@@ -131,7 +128,7 @@ public class Generator {
             } else {
                 BasicBlock basicBlock = curFunction.getCurBasicBlock();
                 int registerNum = curFunction.assignRegister();
-                VarValue var = this.assignTempVarValue();
+                VarValue var = new VarValue(registerNum, true, name);
                 new AllocaInst(basicBlock, var);
                 getCurTable().addValue(var);
                 //下面是计算初始值的地方
@@ -472,7 +469,12 @@ public class Generator {
                 return var;
             } else {
                 //! todo NOT
-                return new Value();
+                int registerNum = curFunction.assignRegister();
+                VarValue var = new VarValue(registerNum, false,true);
+                new IcmpInst(curBlock,var,v,zero,CondString.eq);
+                VarValue var2 = this.assignTempVarValue();
+                new ZextInst(curBlock,var2,var);
+                return var2;
             }
         }
     }
@@ -601,7 +603,10 @@ public class Generator {
 
     }
 
-
+    private VarValue assignTempVarValue() {
+        int registerNum = curFunction.assignRegister();
+        return new VarValue(registerNum, false);
+    }
 
     public void visitStmtReturn(StmtReturn stmt) {
         BasicBlock curBasicBlock = curFunction.getCurBasicBlock();
@@ -680,6 +685,10 @@ public class Generator {
         refillFor.forStmt2Block = curFunction.getCurBasicBlock();//refill
         if (forStmt2 != null) {
             this.visitForStmt(forStmt2);
+        } else {
+            //todo 空stmt2跳到cond（如果有）
+            //跳到Stmt（如果没有cond)
+
         }
         curFunction.addBasicBlock();
         refillFor.endBlock = curFunction.getCurBasicBlock();//refill
