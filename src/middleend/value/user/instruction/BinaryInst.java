@@ -22,22 +22,23 @@ public class BinaryInst extends Instruction {
         this.op2 = op2;
         this.operator = operator;
         this.result.setMyType(IntegerType.i32Type);
-        switch (operator) {
-            case add:
-                this.result.setNum(this.op1.getNum() + this.op2.getNum());
-                break;
-            case sub:
-                this.result.setNum(this.op1.getNum() - this.op2.getNum());
-                break;
-            case mul:
-                this.result.setNum(this.op1.getNum() * this.op2.getNum());
-                break;
-            case sdiv:
-                this.result.setNum(this.op1.getNum() / this.op2.getNum());
-                break;
-            case srem:
-                this.result.setNum(this.op1.getNum() % this.op2.getNum());
-        }
+        //setnum 不太需要
+//        switch (operator) {
+//            case add:
+//                this.result.setNum(this.op1.getNum() + this.op2.getNum());
+//                break;
+//            case sub:
+//                this.result.setNum(this.op1.getNum() - this.op2.getNum());
+//                break;
+//            case mul:
+//                this.result.setNum(this.op1.getNum() * this.op2.getNum());
+//                break;
+//            case sdiv:
+//                this.result.setNum(this.op1.getNum() / this.op2.getNum());
+//                break;
+//            case srem:
+//                this.result.setNum(this.op1.getNum() % this.op2.getNum());
+//        }
     }
     public String getPrint(){
         return result.getName() + " = " + operator.toString()

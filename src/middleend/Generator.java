@@ -248,8 +248,30 @@ public class Generator {
                 ((SureArrayType) tempType).setM(exp2Num);
             }
             if (this.isGlobal) {
-                InitVal initVal = varDef.initVal;
-                ArrayList<ArrayList<Integer>> initValNums = factory.calArrayInitVal(initVal);
+                ArrayList<ArrayList<Integer>> initValNums;
+                if(varDef.initVal != null){
+                    InitVal initVal = varDef.initVal;initValNums = factory.calArrayInitVal(initVal);
+                } else {
+                    if(((SureArrayType) tempType).type == 0){
+                        ArrayList<Integer> zeroLevel= new ArrayList<Integer>();
+                        for(int i = 0;i<((SureArrayType) tempType).n;i++){
+                            zeroLevel.add(0);
+                        }
+                        initValNums = new ArrayList<>();
+                        initValNums.add(zeroLevel);
+                    } else {
+                        int n = ((SureArrayType) tempType).n;
+                        int m = ((SureArrayType) tempType).m;
+                        initValNums = new ArrayList<>();
+                        for(int i = 0;i<n;i++){
+                            ArrayList<Integer> level = new ArrayList<>();
+                            for(int j = 0;j<m;j++){
+                                level.add(0);
+                            }
+                            initValNums.add(level);
+                        }
+                    }
+                }
                 getCurTable().addValue(
                         new GlobalVar(name, false, initValNums, tempType)
                 );
@@ -912,8 +934,32 @@ public class Generator {
     }
 
     private void storeLValWithValue(LVal lVal, Value value) {
+        //todo 不一样
+        //lVal在左边
+        //与visitLVal那种lVal在右边需要被读取的感觉不一样
         BasicBlock curBasicBlock = curFunction.getCurBasicBlock();
-        Value toValue = this.tableList.foundDef(lVal.ident.getName());
+        Value foundDef = this.tableList.foundDef(lVal.ident.getName());
+        Value toValue = foundDef;
+        Type targetType = ((PointerType)toValue.getMyType()).targetType;
+        if(!(targetType instanceof IntegerType)){
+            //数组
+            int len = lVal.exps.size();
+            if(len == 1){
+                //a[1] = value
+                Value n = this.visitAddExp(lVal.exps.get(0).addExp);
+                VarValue v0 = this.assignTempVarValue();
+                new GetPtrInstSureArray(curBasicBlock,v0,foundDef,n);
+                toValue = v0;
+            } else {
+                //a[2] = value
+                Value n = this.visitAddExp(lVal.exps.get(0).addExp);
+                Value m = this.visitAddExp(lVal.exps.get(1).addExp);
+                VarValue v0 = this.assignTempVarValue();
+                new GetPtrInstSureArray(curBasicBlock,v0,foundDef,n,m);
+                toValue = v0;
+            }
+            //toValue = this.visitLVal(lVal);
+        }
         new StoreInst(curBasicBlock, value, toValue);
     }
 
