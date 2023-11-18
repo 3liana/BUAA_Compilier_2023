@@ -141,11 +141,13 @@ public class Parser {
         if (this.getToken().getCategory() == Category.LBRACK) {
             this.next();//[
             this.next();//]
+            funcFParam.type = 1;
             while (this.getToken().getCategory() == Category.LBRACK) {
                 this.next();//[
                 ConstExp exp = this.parseConstExp();
                 funcFParam.appendExp(exp);
                 this.next();//]
+                funcFParam.type = 2;
             }
         }
         this.ans.add("<FuncFParam>");
@@ -644,7 +646,6 @@ public class Parser {
 
     public Number parseNumber() {
         Token t = this.getToken();
-        //todo 检查
         this.next();
         this.ans.add("<Number>");
         return new Number(t);
@@ -652,7 +653,6 @@ public class Parser {
 
     public UnaryOp parseUnaryOp() {
         Token t = this.getToken();
-        //todo 检查是
         this.next();
         this.ans.add("<UnaryOp>");
         return new UnaryOp(t);

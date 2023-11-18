@@ -12,15 +12,15 @@ public class StoreInst extends Instruction {
     //store某Type的变量给它的Pointer
     private Value fromValue;
     private Value toValue;
-    private Type type = new IntegerType(32);
+    private Type fromType = new IntegerType(32);
     public StoreInst(BasicBlock basicBlock,Value fromValue,Value toValue){
         super(basicBlock);
         this.fromValue = fromValue;
         this.toValue = toValue;
         this.toValue.setNum(this.fromValue.getNum());
-        this.type = fromValue.getMyType();
+        this.fromType = fromValue.getMyType();
         if(toValue.getMyType() == null){//不太可能有这种情况吧
-            toValue.setMyType(new PointerType(this.type));
+            toValue.setMyType(new PointerType(this.fromType));
         }
     }
     public StoreInst(BasicBlock basicBlock,Value fromValue,Value toValueArray,int n){
@@ -31,7 +31,7 @@ public class StoreInst extends Instruction {
         //计算toValue
         int registerNum = basicBlock.belongFunction.assignRegister();
         VarValue v = new VarValue(registerNum,false);
-        new GetPtrInst(basicBlock,v,toValueArray,n);
+        new GetPtrInstSureArray(basicBlock,v,toValueArray,n);
         basicBlock.addInst(this);
         this.toValue = v;
     }
@@ -43,13 +43,13 @@ public class StoreInst extends Instruction {
         //计算toValue
         int registerNum = basicBlock.belongFunction.assignRegister();
         VarValue v = new VarValue(registerNum,false);
-        new GetPtrInst(basicBlock,v,toValueArray,n,m);
+        new GetPtrInstSureArray(basicBlock,v,toValueArray,n,m);
         basicBlock.addInst(this);
         this.toValue = v;
 
     }
     public String getPrint(){
-        return "store " + type + " " + fromValue.getName() +", " +
-                type + "* " + toValue.getName() + "\n";
+        return "store " + fromType + " " + fromValue.getName() +", " +
+                fromType + "* " + toValue.getName() + "\n";
     }
 }

@@ -1,6 +1,7 @@
 package middleend.value;
 
 import middleend.IRModule;
+import middleend.type.PointerType;
 import middleend.type.SureArrayType;
 import middleend.type.IntegerType;
 import middleend.type.Type;
@@ -13,6 +14,7 @@ public class GlobalVar extends User {
 //    private int num;
     String blank = " ";
     private int type;//0 0维
+    private Type targetType;
     private ArrayList<ArrayList<Integer>> initValNums;
 
     public GlobalVar(String name, boolean isConst, int num) {
@@ -20,7 +22,8 @@ public class GlobalVar extends User {
         this.isConst = isConst;
         this.num = num;
         IRModule.getModuleInstance().addGlobalVar(this);
-        this.setMyType(IntegerType.i32Type);
+        this.setMyType(new PointerType(IntegerType.i32Type));
+        this.targetType = IntegerType.i32Type;
         this.type = 0;
         //
     }
@@ -29,7 +32,8 @@ public class GlobalVar extends User {
         this.isConst = isConst;
         this.initValNums = initValNums;
         IRModule.getModuleInstance().addGlobalVar(this);
-        this.setMyType(type);
+        this.setMyType(new PointerType(type));
+        this.targetType = type;
         this.type = 1;
     }
     public String getName() {
@@ -45,19 +49,19 @@ public class GlobalVar extends User {
     public String getPrint() {
         String s0 = isConst ? "constant" : "global";
         if(this.type == 0){
-            return this.getName() + blank + "=" + blank + s0 + blank + this.myType + blank + this.num + "\n";
+            return this.getName() + blank + "=" + blank + s0 + blank + this.targetType + blank + this.num + "\n";
         } else {
             StringBuilder sb = new StringBuilder();
             //数组  myType必是GlobalArrayType
-            SureArrayType myType = (SureArrayType) this.getMyType();
-            if(myType.type == 0){
+            SureArrayType targetType = (SureArrayType) this.targetType;
+            if(targetType.type == 0){
                 //一维数组
                 ArrayList<Integer> level= this.initValNums.get(0);
                 this.appendLevel(sb,level);
             } else {
                 //二维数组
                 sb.append("[");
-                SureArrayType insideType = new SureArrayType(myType.m);
+                SureArrayType insideType = new SureArrayType(targetType.m);
 
                 for(int i = 0;i<this.initValNums.size()-1;i++){
                     ArrayList<Integer> level= this.initValNums.get(i);
@@ -74,7 +78,7 @@ public class GlobalVar extends User {
                 }
                 sb.append("]");
             }
-            return this.getName() + blank + "=" + blank + s0 + blank + this.myType + blank +
+            return this.getName() + blank + "=" + blank + s0 + blank + this.targetType + blank +
                     sb + "\n";
         }
     }

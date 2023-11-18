@@ -18,7 +18,7 @@ public class AddExp {
         this.symbols.add(symbol);
     }
     public boolean isConstExp(){
-        //todo 建设中
+        //没用 所以没写了
         return false;
     }
 

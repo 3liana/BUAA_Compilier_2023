@@ -1,6 +1,7 @@
 package middleend.value.user;
 
 import frontend.paser_package.FuncFParam;
+import middleend.Generator;
 import middleend.IRModule;
 import middleend.Value;
 import middleend.symbol.SymbolTable;
@@ -8,6 +9,9 @@ import middleend.type.Type;
 import middleend.type.VoidType;
 import middleend.value.ParamVarValue;
 import middleend.value.User;
+import middleend.value.VarValue;
+import middleend.value.user.instruction.AllocaInst;
+import middleend.value.user.instruction.StoreInst;
 
 import java.util.ArrayList;
 
@@ -17,7 +21,8 @@ public class Function extends User {
     public String name;
     public int registerNum = 0;//function本身的registerNum为0
     private String blank = " ";
-    private ArrayList<Value> params = new ArrayList<>();
+    private ArrayList<ParamVarValue> params = new ArrayList<>();
+    private SymbolTable symbolTable;
 
     public Function(String name, Type returnType) {
         this.name = name;
@@ -38,14 +43,20 @@ public class Function extends User {
         this.name = name;
         this.returnType = returnType;
         this.basicBlocks = new ArrayList<>();
+        this.symbolTable = symbolTable;
         //
         for (FuncFParam f : params) {
             int registerNum = this.assignRegister();
-            ParamVarValue value = new ParamVarValue(registerNum, f.ident.getName());
-            symbolTable.addValue(value);//加入符号表
+            ParamVarValue value = new ParamVarValue(registerNum, f.ident.getName(),f.type);
+            if(f.type == 2){
+                value.m = Generator.generator.factory.calAddExp(f.constExp.addExp);
+            }
+            value.calMyType();
+           // symbolTable.addValue(value);//加入符号表
             this.params.add(value);
         }
         this.addFirstBasicBlock();
+        this.alloca_store_param();
         //
         boolean isMain = name.equals("main");
         if (isMain) {
@@ -54,7 +65,17 @@ public class Function extends User {
             IRModule.getModuleInstance().addFunction(this);
         }
     }
-
+    public void alloca_store_param(){
+        //初始化调用
+        BasicBlock curBasicBlock = this.getCurBasicBlock();
+        for(ParamVarValue value:this.params ){
+            int registerNum = this.assignRegister();
+            Value result = new VarValue(registerNum, false,value.getTableName());
+            new AllocaInst(curBasicBlock, result, value.getMyType());
+            new StoreInst(curBasicBlock, value, result);
+            symbolTable.addValue(result);
+        }
+    }
     public String getTableName() {
         return this.name;
     }

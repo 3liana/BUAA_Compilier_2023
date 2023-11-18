@@ -1,6 +1,7 @@
 package middleend.value.user.instruction;
 
 import middleend.Value;
+import middleend.type.IntegerType;
 import middleend.value.user.BasicBlock;
 import middleend.value.user.Instruction;
 
@@ -14,6 +15,7 @@ public class LibraryCallInst extends Instruction {
         super(block);
         this.type = type;
         this.value = value;
+        this.value.setMyType(IntegerType.i32Type);
     }
     public String getPrint(){
         if(this.type == 1){

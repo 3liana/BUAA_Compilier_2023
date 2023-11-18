@@ -20,7 +20,10 @@ public class LoadInst extends Instruction {
         //fromValue的MyType一定是pointType
         PointerType pointerType = (PointerType) fromValue.getMyType();
         Type targetType = pointerType.targetType;
-        result.setMyType(targetType);
+        this.type = targetType;
+        if(result.getMyType()==null){
+            result.setMyType(targetType);
+        }
     }
     public String getPrint(){
         return result.getName() + " = load " + type +", " +

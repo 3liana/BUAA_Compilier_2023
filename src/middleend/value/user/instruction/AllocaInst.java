@@ -11,6 +11,7 @@ public class AllocaInst extends Instruction {
     private Value result;
     private Type targetType = IntegerType.i32Type;
     public AllocaInst(BasicBlock block,Value result){
+        //默认位i32的构造函数
         super(block);
         this.result = result;
         result.setMyType(new PointerType(targetType));

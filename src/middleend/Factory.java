@@ -26,7 +26,6 @@ public class Factory {
     // 计算方面
     public ArrayList<ArrayList<Integer>> calArrayConstInitVal(ConstInitVal constInitVal){
         ArrayList<ArrayList<Integer>> returnArray = new ArrayList<>();
-        //todo
         //调用此函数
         //不可能为0 即只有一个数组的情况
         if(constInitVal.type == 1){
@@ -46,6 +45,34 @@ public class Factory {
                     ArrayList<Integer> array = new ArrayList<>();
                     for(ConstInitVal inside: initVal.initVals){
                         array.add(this.calConstExp(inside.exp));
+                    }
+                    returnArray.add(array);
+                }
+            }
+        }
+        return returnArray;
+    }
+    public ArrayList<ArrayList<Integer>> calArrayInitVal(InitVal initVal){
+        ArrayList<ArrayList<Integer>> returnArray = new ArrayList<>();
+        //调用此函数
+        //不可能为0 即只有一个数组的情况
+        if(initVal.type == 1){
+            //为空 todo
+        } else {
+            InitVal temp = initVal.initVals.get(0);
+            if(temp.type == 0){
+                //一维数组
+                ArrayList<Integer> array = new ArrayList<>();
+                for(InitVal tempInitVal:initVal.initVals){
+                    array.add(this.calAddExp(tempInitVal.exp.addExp));
+                }
+                returnArray.add(array);
+            } else {
+                //1,2:二维数组
+                for(InitVal tempInitVal:initVal.initVals){
+                    ArrayList<Integer> array = new ArrayList<>();
+                    for(InitVal inside: tempInitVal.initVals){
+                        array.add(this.calAddExp(inside.exp.addExp));
                     }
                     returnArray.add(array);
                 }

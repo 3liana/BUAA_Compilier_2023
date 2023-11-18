@@ -16,7 +16,6 @@ public class RefillUtil {
     public boolean hasCond = true;
     public RefillUtil(){
     }
-    //todo 增加hasCond逻辑判断
     public void refill() {
         //根据文法，肯定是至少有一层lAndExp存在的
         BasicBlock beforeIf = refillBasicBlocks.get(0).get(0);
