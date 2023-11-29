@@ -10,8 +10,8 @@ import middleend.value.user.Instruction;
 
 public class StoreInst extends Instruction {
     //store某Type的变量给它的Pointer
-    private Value fromValue;
-    private Value toValue;
+    public Value fromValue;
+    public Value toValue;
     private Type fromType = new IntegerType(32);
     public StoreInst(BasicBlock basicBlock,Value fromValue,Value toValue){
         super(basicBlock);

@@ -1,6 +1,7 @@
 import java.io.*;
 import java.util.ArrayList;
 
+import backend.MipsGenerator;
 import frontend.Lexer;
 import frontend.Parser;
 import frontend.lexer_package.*;
@@ -32,13 +33,28 @@ public class Compiler {
         generator.visitCompUnit();
         IRModule module = IRModule.getModuleInstance();
         String llvm = module.getPrint();
-        System.out.println(llvm);
+//        System.out.println(llvm); //将llvm输出到控制台
         byte[] llvmDataBytes = (llvm).getBytes();
         fOut.write(llvmDataBytes);
         if(Compiler.debugValueCalculation){
             //打印符号表 和对应的值
             generator.tableList.debugValueCalculation();
         }
+        MipsGenerator mipsGenerator = new MipsGenerator();
+        ArrayList<String> mipsOutput1 = mipsGenerator.datas;
+        ArrayList<String> mipsOutput2 = mipsGenerator.texts;
+        StringBuilder sb = new StringBuilder();
+        for(String s :mipsOutput1){
+            sb.append(s);
+        }
+        for(String s :mipsOutput2){
+            sb.append(s);
+        }
+        System.out.println(sb.toString());
+        byte[] mipsDataBytes = (sb.toString()).getBytes();
+        File mipsOutputFile = new File("mips.txt");
+        OutputStream mipsFOut = new FileOutputStream(mipsOutputFile);
+        mipsFOut.write(mipsDataBytes);
     }
 
     private static void getTokens(BufferedReader br, ArrayList<Token> tokens) throws IOException {

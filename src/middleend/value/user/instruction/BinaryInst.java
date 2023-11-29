@@ -9,10 +9,10 @@ import middleend.value.user.Instruction;
 
 public class BinaryInst extends Instruction {
     //<result>=<operator><ty><op1><op2>
-    private Value result;
-    private Value op1;
-    private Value op2;
-    private Operator operator;
+    public Value result;
+    public Value op1;
+    public Value op2;
+    public Operator operator;
     private Type type = new IntegerType(32);
     //能进行加减乘除运算的只有32位，所以没关系
     public BinaryInst(BasicBlock block,Value result, Value op1, Value op2, Operator operator) {

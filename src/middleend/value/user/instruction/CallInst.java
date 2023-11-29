@@ -9,9 +9,9 @@ import java.util.ArrayList;
 
 public class CallInst extends Instruction {
 
-    private Function function;
-    private Value result = null;
-    private ArrayList<Value> rParams;
+    public Function function;
+    public Value result = null;
+    public ArrayList<Value> rParams;
     public CallInst(BasicBlock basicBlock,Function function, ArrayList<Value> rParams){
         super(basicBlock);
         this.function = function;

@@ -740,9 +740,8 @@ public class Generator {
         BasicBlock block1 = curFunction.getCurBasicBlock();
         refillIf.realTrueBlock1 = block1;
         Stmt trueStmt = stmt.stmt;
-        refillIf.realTrueBlock2 = curFunction.getCurBasicBlock();//refill
-
         this.visitStmt(trueStmt);
+        refillIf.realTrueBlock2 = curFunction.getCurBasicBlock();//refill
         if (stmt.type == 1) {
             curFunction.addBasicBlock();
             BasicBlock block2 = curFunction.getCurBasicBlock();

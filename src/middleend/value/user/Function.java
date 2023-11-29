@@ -13,6 +13,7 @@ import middleend.value.VarValue;
 import middleend.value.user.instruction.AllocaInst;
 import middleend.value.user.instruction.StoreInst;
 import middleend.value.user.instruction.terminateInst.BrInst;
+import middleend.value.user.instruction.terminateInst.RetInst;
 
 import java.util.ArrayList;
 
@@ -22,7 +23,7 @@ public class Function extends User {
     public String name;
     public int registerNum = 0;//function本身的registerNum为0
     private String blank = " ";
-    private ArrayList<ParamVarValue> params = new ArrayList<>();
+    public ArrayList<ParamVarValue> params = new ArrayList<>();
     private SymbolTable symbolTable;
 
     public Function(String name, Type returnType) {
@@ -46,15 +47,17 @@ public class Function extends User {
         this.basicBlocks = new ArrayList<>();
         this.symbolTable = symbolTable;
         //
+        int count = 0;
         for (FuncFParam f : params) {
             int registerNum = this.assignRegister();
-            ParamVarValue value = new ParamVarValue(registerNum, f.ident.getName(),f.type);
+            ParamVarValue value = new ParamVarValue(registerNum, f.ident.getName(),f.type,count);
             if(f.type == 2){
                 value.m = Generator.generator.factory.calAddExp(f.constExp.addExp);
             }
             value.calMyType();
            // symbolTable.addValue(value);//加入符号表
             this.params.add(value);
+            count++;
         }
         this.addFirstBasicBlock();
         this.alloca_store_param();
@@ -72,9 +75,11 @@ public class Function extends User {
         for(ParamVarValue value:this.params ){
             int registerNum = this.assignRegister();
             Value result = new VarValue(registerNum, false,value.getTableName());
+            //需要找到param的时候实际上找到的是param的复制品这个
             new AllocaInst(curBasicBlock, result, value.getMyType());
             new StoreInst(curBasicBlock, value, result);
             symbolTable.addValue(result);
+            //只有这个加入了symbolTable,原value并没有
         }
     }
     public String getTableName() {
@@ -119,9 +124,6 @@ public class Function extends User {
     }
 
     public int assignRegister() {
-        if(this.registerNum == 39){
-            System.out.println("debug");
-        }
         return this.registerNum++;
     }
 
@@ -150,8 +152,13 @@ public class Function extends User {
                 ")" + blank + "{\n";
         String s1 = this.getBasicBlocksPrint();
         if (returnType instanceof VoidType && !s1.endsWith("ret void\n")) {
-            s1 = s1 + "ret void\n";
+//            s1 = s1 + "ret void\n";
+            BasicBlock lastB = this.basicBlocks.get(
+                    this.basicBlocks.size()-1
+            );
+            new RetInst(lastB);
         }
+        s1 = this.getBasicBlocksPrint();
         String s2 = "}\n";
         return s0 + s1 + s2;
     }

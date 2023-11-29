@@ -5,7 +5,7 @@ import middleend.type.IntegerType;
 import middleend.type.Type;
 
 public class ConstValue extends Value {
-    private String num;
+    public String num;
 
     public ConstValue(String num) {
         this.myType = IntegerType.i32Type;

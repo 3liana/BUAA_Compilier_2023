@@ -8,9 +8,9 @@ import java.util.ArrayList;
 public class IRModule {
     //单例模式
     private static final IRModule module = new IRModule();
-    private ArrayList<GlobalVar> globalVars;
-    private ArrayList<Function> functions;
-    private Function mainFunction;
+    public ArrayList<GlobalVar> globalVars;
+    public ArrayList<Function> functions;
+    public Function mainFunction;
     private IRModule(){
         this.globalVars = new ArrayList<>();
         this.functions = new ArrayList<>();

@@ -10,10 +10,12 @@ public class ParamVarValue extends Value {
     public String tableName;
     public int m = -1;//形参的维度数必须是确定的
     private int type;
-    public ParamVarValue(int registerNum,String tableName,int type){
+    public int placeInParams = -1;//是第几个param 从0开始记
+    public ParamVarValue(int registerNum,String tableName,int type,int placeInParams){
         this.registerNum = registerNum;
         this.tableName = tableName;
         this.type = type;
+        this.placeInParams = placeInParams;
     }
     public void calMyType(){
         if(this.type == 0){

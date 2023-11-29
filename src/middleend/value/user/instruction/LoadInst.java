@@ -9,8 +9,8 @@ import middleend.value.user.Instruction;
 
 public class LoadInst extends Instruction {
     private Type type = new IntegerType(32);
-    private Value result;
-    private Value fromValue;
+    public Value result;
+    public Value fromValue;
     public LoadInst(BasicBlock basicBlock,Value result,Value fromValue) {
         super(basicBlock);
         this.result = result;

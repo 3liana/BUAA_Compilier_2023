@@ -8,7 +8,7 @@ import middleend.value.user.BasicBlock;
 import middleend.value.user.Instruction;
 
 public class AllocaInst extends Instruction {
-    private Value result;
+    public Value result;
     private Type targetType = IntegerType.i32Type;
     public AllocaInst(BasicBlock block,Value result){
         //默认位i32的构造函数

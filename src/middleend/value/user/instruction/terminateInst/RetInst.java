@@ -10,7 +10,7 @@ public class RetInst extends Instruction {
     //ret <ty> <value>
     //ret void
     private Type type;
-    private Value value;
+    public Value value;
     public RetInst(BasicBlock block,Type type,Value value) {
         super(block);
         this.type = type;

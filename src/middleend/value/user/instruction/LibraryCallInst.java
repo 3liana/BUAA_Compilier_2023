@@ -6,11 +6,11 @@ import middleend.value.user.BasicBlock;
 import middleend.value.user.Instruction;
 
 public class LibraryCallInst extends Instruction {
-    private int type;
+    public int type;
     //1 read
     //2 putch
     //3 putint
-    private Value value;
+    public Value value;
     public LibraryCallInst(BasicBlock block,int type, Value value){
         super(block);
         this.type = type;

@@ -2,6 +2,9 @@ package middleend;
 
 import middleend.type.IntegerType;
 import middleend.type.Type;
+import middleend.value.GlobalVar;
+import middleend.value.ParamVarValue;
+import middleend.value.user.Function;
 
 public class Value {
     protected Type myType = null;
@@ -36,4 +39,14 @@ public class Value {
 //    public Type getType() {
 //        return new IntegerType(32);
 //    }
+    public String getMipsName(){
+        if(this instanceof GlobalVar){
+            return ((GlobalVar)this).name;
+        } else if(this instanceof Function){
+            return ((Function) this).name;
+        }
+        else {
+            return this.getName();
+        }
+    }
 }
