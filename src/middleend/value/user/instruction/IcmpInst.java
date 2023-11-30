@@ -8,10 +8,10 @@ import middleend.value.user.Instruction;
 
 public class IcmpInst extends Instruction {
     private Type ty = new IntegerType(32);//能进行>,<,>=,<=也只有i32
-    private Value result;
-    private Value v0;
-    private Value v1;
-    private CondString cond;
+    public Value result;
+    public Value v0;
+    public Value v1;
+    public CondString cond;
     public IcmpInst(BasicBlock b,Value result,Value v0,Value v1,CondString cond){
         super(b);
         this.result = result;

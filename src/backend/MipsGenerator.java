@@ -20,12 +20,14 @@ public class MipsGenerator {
     private IRModule irModule = IRModule.getModuleInstance();
     public ArrayList<String> datas = new ArrayList<>();
     public ArrayList<String> texts = new ArrayList<>();
+    public ArrayList<String> macros = new ArrayList<>();
     public HashMap<String, Integer> spTable = new HashMap<>();
     // public HashMap<String, String> tempTable = new HashMap<>();
-    private MipsFactory mipsFactory = new MipsFactory(datas, texts);
+    private MipsFactory mipsFactory = new MipsFactory(datas, texts, macros);
     private int curSp = 0;
     private boolean inMain = false;
     private boolean debug = true;
+    private String curFunction;
 
     public MipsGenerator() {
         this.visitModule();
@@ -44,19 +46,21 @@ public class MipsGenerator {
             this.visitFunction(function);
         }
     }
+
     private void minusSp() {
         mipsFactory.MinusSpBy4();
         curSp -= 4;
     }
-    private void restoreSp(int num){
+
+    private void restoreSp(int num) {
         mipsFactory.restoreSpByGap(num);
         curSp += num;
     }
+
     public void visitGlobalVar(GlobalVar globalVar) {
         GlobalMips globalMips;
         if (globalVar.type == 0) {
             globalMips = new GlobalMips(globalVar.name, "word", globalVar.getInitNum());
-
         } else {
             //数组
             globalMips = new GlobalMips(globalVar.name, "word", globalVar.initValNums);
@@ -87,9 +91,18 @@ public class MipsGenerator {
 
     private void initFunctionLabel(Function function) {
         this.texts.add(function.name + ":\n");
+        this.curFunction = function.name;
+    }
+
+    private void initBasicBlockLabel(BasicBlock basicBlock) {
+        if (!basicBlock.isFirst) {
+            String s0 = curFunction + "_block" + basicBlock.registerNum;
+            this.texts.add(s0 + ":\n");
+        }
     }
 
     public void visitBasicBlock(BasicBlock basicBlock) {
+        this.initBasicBlockLabel(basicBlock);
         for (Instruction instruction : basicBlock.instructions) {
             this.visitInstruction(instruction);
         }
@@ -99,31 +112,33 @@ public class MipsGenerator {
         if (debug) {
             this.texts.add("#");
             this.texts.add(instruction.getPrint());
-            System.out.println(instruction.getPrint());
+            //System.out.println(instruction.getPrint());
         }
         if (instruction instanceof AllocaInst) {
             this.visitAllocaInst((AllocaInst) instruction);
-        }
-        if (instruction instanceof LoadInst) {
+        } else if (instruction instanceof LoadInst) {
             this.visitLoadInst((LoadInst) instruction);
-        }
-        if (instruction instanceof StoreInst) {
+        } else if (instruction instanceof StoreInst) {
             this.visitStoreInst((StoreInst) instruction);
-        }
-        if (instruction instanceof BinaryInst) {
+        } else if (instruction instanceof BinaryInst) {
             this.visitBinaryInst((BinaryInst) instruction);
-        }
-        if (instruction instanceof RetInst) {
+        } else if (instruction instanceof RetInst) {
             this.visitRetInst((RetInst) instruction);
-        }
-        if (instruction instanceof CallInst) {
+        } else if (instruction instanceof CallInst) {
             this.visitCallInst((CallInst) instruction);
-        }
-        if (instruction instanceof LibraryCallInst) {
+        } else if (instruction instanceof LibraryCallInst) {
             this.visitLibraryCallInst((LibraryCallInst) instruction);
+        } else if (instruction instanceof IcmpInst) {
+            this.visitIcmpInst((IcmpInst) instruction);
+        } else if (instruction instanceof ZextInst) {
+            this.visitZextInst((ZextInst) instruction);
+        } else if(instruction instanceof BrInst){
+            this.visitBrInst((BrInst) instruction);
+        }
+        else {
+            System.err.println("unknown instruction type " + instruction.getClass().getName());
         }
     }
-
 
 
     //part1
@@ -155,7 +170,7 @@ public class MipsGenerator {
         String name = toValue.getMipsName();
         //如果要改变全局变量
         String toStr;
-        if(toValue instanceof GlobalVar){
+        if (toValue instanceof GlobalVar) {
             toStr = name;
         }
         //
@@ -183,7 +198,7 @@ public class MipsGenerator {
             mipsFactory.genBinary("div");
             mipsFactory.genMfhi("$t0");
         } else if (opStr.equals("div") || opStr.equals("mult")) {
-            //todo div 和 mult都是取低位？
+            //div 和 mult都是取低位
             mipsFactory.genBinary(opStr);
             mipsFactory.genMflo("$t0");
         } else {
@@ -215,7 +230,7 @@ public class MipsGenerator {
     public void visitRetInst(RetInst retInst) {
         //return
         //获取返回值
-        if(retInst.value != null){
+        if (retInst.value != null) {
             Value value = retInst.value;
             String reg = "$t0";
             this.visitValueToReg(reg, value);
@@ -264,7 +279,7 @@ public class MipsGenerator {
         //
         mipsFactory.genJal(fname);
         //恢复ra
-        mipsFactory.genLw("0($sp)","$ra");
+        mipsFactory.genLw("0($sp)", "$ra");
         this.restoreSp(4);
         //如果参数超过四个 还要恢复内存里给参数的
         int paramGap = 4 * (callInst.rParams.size());
@@ -302,14 +317,56 @@ public class MipsGenerator {
 
     //part3
     public void visitBrInst(BrInst brInst) {
+        if (brInst.type == 1) {
+            //无条件跳转
+            String label = getJumpToLable(brInst.dest);
+            mipsFactory.genJ(label);
+        } else {
+            //0 : br i1 <condValue>, label <iftrue>, label <iffalse>
+            Value condValue = brInst.condValue;
+            String reg = "$t0";
+            this.visitValueToReg(reg, condValue);
+            mipsFactory.genBrWithLabel(reg,
+                    this.getJumpToLable(brInst.ifTure),
+                    this.getJumpToLable(brInst.ifFalse));
+        }
+    }
+
+    private String getJumpToLable(Value block) {
+        return curFunction + "_block" + ((BasicBlock) block).registerNum;
+    }
+
+    private String getIcmpMacro(CondString condString) {
+        return "check_" + condString;
     }
 
     public void visitIcmpInst(IcmpInst icmpInst) {
+        Value result = icmpInst.result;
+        Value v0 = icmpInst.v0;//save to t1
+        Value v1 = icmpInst.v1;//save t0 t2
+        String reg1 = "$t1";
+        String reg2 = "$t2";
+        this.visitValueToReg(reg1, v0);
+        this.visitValueToReg(reg2, v1);
+        mipsFactory.genIcmp(this.getIcmpMacro(icmpInst.cond), reg1, reg2);
+        //保存结果
+        this.minusSp();
+        mipsFactory.genSw("$t0");//宏把比较的结果保存在了t0上面
+        this.spTable.put(result.getMipsName(), curSp);
     }
 
     public void visitZextInst(ZextInst zextInst) {
+        Value result = zextInst.result;
+        Value fromValue = zextInst.fromValue;
+        String reg = "$t0";
+        this.visitValueToReg(reg, fromValue);
+        //保存结果
+        this.minusSp();
+        mipsFactory.genSw("$t0");//宏把比较的结果保存在了t0上面
+        this.spTable.put(result.getMipsName(), curSp);
     }
 
+    //part4 数组相关
     private void initData() {
         this.datas.add(".data\n");
     }

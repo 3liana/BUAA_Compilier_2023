@@ -41,9 +41,13 @@ public class Compiler {
             generator.tableList.debugValueCalculation();
         }
         MipsGenerator mipsGenerator = new MipsGenerator();
+        ArrayList<String> mipsOutput0 = mipsGenerator.macros;
         ArrayList<String> mipsOutput1 = mipsGenerator.datas;
         ArrayList<String> mipsOutput2 = mipsGenerator.texts;
         StringBuilder sb = new StringBuilder();
+        for(String s :mipsOutput0){
+            sb.append(s);
+        }
         for(String s :mipsOutput1){
             sb.append(s);
         }

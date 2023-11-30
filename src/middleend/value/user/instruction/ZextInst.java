@@ -6,8 +6,8 @@ import middleend.value.user.BasicBlock;
 import middleend.value.user.Instruction;
 
 public class ZextInst extends Instruction {
-    private Value result;
-    private Value fromValue;
+    public Value result;
+    public Value fromValue;
     public ZextInst(BasicBlock b,Value result, Value fromValue){
         super(b);
         this.result = result;

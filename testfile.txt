@@ -1,13 +1,9 @@
-int g = 3;
-void f3(){
-g = g + 1;
-}
-int f4(){
-return g;
-}
+int a=-1;
 int main(){
-  printf("%d",f4());
-  f3();
-  printf("%d",f4());
-  return 0;
+    if(a>0){
+       printf("1");
+    } else {
+       printf("2");
+    }
+    return 0;
 }

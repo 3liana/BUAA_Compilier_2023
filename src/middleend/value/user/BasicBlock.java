@@ -6,7 +6,7 @@ import middleend.value.user.Instruction;
 import java.util.ArrayList;
 
 public class BasicBlock extends Value {
-    private boolean isFirst;//是否是所属函数的第一个basicBlock
+    public boolean isFirst;//是否是所属函数的第一个basicBlock
     public int registerNum;
     public ArrayList<Instruction> instructions;
     public Value reVar = null;//为回填设计
