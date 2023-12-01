@@ -23,7 +23,7 @@ public class GlobalVar extends User {
         this.name = name;
         this.isConst = isConst;
         this.initNum = num;
-        this.num = num;
+        this.num = num;//fatory里面的查lVal会用到
         IRModule.getModuleInstance().addGlobalVar(this);
         this.setMyType(new PointerType(IntegerType.i32Type));
         this.targetType = IntegerType.i32Type;

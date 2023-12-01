@@ -149,6 +149,8 @@ public class Factory {
         }
     }
     public int calLVal(LVal lVal){
+        //除了给globalVar计算初值，还会出现在函数里面给数组形参计算维数
+        //但是不管怎么样只会查globalVar，不会查到之后定义的变量
         String name = lVal.ident.getName();
         //查符号表
         Value value = this.tableList.foundDef(name);//逐层查找

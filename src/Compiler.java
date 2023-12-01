@@ -36,10 +36,10 @@ public class Compiler {
 //        System.out.println(llvm); //将llvm输出到控制台
         byte[] llvmDataBytes = (llvm).getBytes();
         fOut.write(llvmDataBytes);
-        if(Compiler.debugValueCalculation){
-            //打印符号表 和对应的值
-            generator.tableList.debugValueCalculation();
-        }
+//        if(Compiler.debugValueCalculation){
+//            //打印符号表 和对应的值
+//            generator.tableList.debugValueCalculation();
+//        }
         MipsGenerator mipsGenerator = new MipsGenerator();
         ArrayList<String> mipsOutput0 = mipsGenerator.macros;
         ArrayList<String> mipsOutput1 = mipsGenerator.datas;

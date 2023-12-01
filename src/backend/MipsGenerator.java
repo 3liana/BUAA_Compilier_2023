@@ -23,11 +23,13 @@ public class MipsGenerator {
     public ArrayList<String> macros = new ArrayList<>();
     public HashMap<String, Integer> spTable = new HashMap<>();
     // public HashMap<String, String> tempTable = new HashMap<>();
+    public HashMap<String, Integer> basicBlockSpTable = new HashMap<>();
     private MipsFactory mipsFactory = new MipsFactory(datas, texts, macros);
     private int curSp = 0;
     private boolean inMain = false;
     private boolean debug = true;
     private String curFunction;
+    private int curBlockNum;
 
     public MipsGenerator() {
         this.visitModule();
@@ -73,9 +75,12 @@ public class MipsGenerator {
         this.spTable = new HashMap<>();//每个function都要把table清零
         this.curSp = 0;
         // this.tempTable = new HashMap<>();//每个function都要把table清零
+        this.basicBlockSpTable = new HashMap<>();
         //把形参加入符号表
         int len = function.params.size();
         //0到4存的是$ra
+        this.texts.add("move $s6,$s7\n");//*
+        this.texts.add("move $s7,$sp\n");//*
         int place = 4;
         for (int i = len - 1; i >= 0; i--) {
             ParamVarValue v = function.params.get(i);
@@ -90,6 +95,7 @@ public class MipsGenerator {
     }
 
     private void initFunctionLabel(Function function) {
+        this.texts.add("#function " + function.name + ":\n");
         this.texts.add(function.name + ":\n");
         this.curFunction = function.name;
     }
@@ -97,12 +103,22 @@ public class MipsGenerator {
     private void initBasicBlockLabel(BasicBlock basicBlock) {
         if (!basicBlock.isFirst) {
             String s0 = curFunction + "_block" + basicBlock.registerNum;
+            this.basicBlockSpTable.put(s0,curSp);
+            this.curBlockNum = basicBlock.registerNum;
+            this.texts.add("#block " + basicBlock.registerNum + ":\n");
             this.texts.add(s0 + ":\n");
         }
     }
 
     public void visitBasicBlock(BasicBlock basicBlock) {
         this.initBasicBlockLabel(basicBlock);
+        //恢复block的sp
+//        int originalSp = 12284;
+//        int nowSp = originalSp + curSp;
+//        this.texts.add("li $sp," + nowSp + "\n");
+        String orginalReg = "$s7";//最开始的sp被保存在t7里
+        this.texts.add("addi $sp," + orginalReg + "," + curSp + "\n");
+        //this.texts.add("addi $sp,$sp," + curSp + "\n");
         for (Instruction instruction : basicBlock.instructions) {
             this.visitInstruction(instruction);
         }
@@ -153,6 +169,8 @@ public class MipsGenerator {
         if (fromValue instanceof GlobalVar) {
             fromStr = fromValue.getMipsName();
         } else {
+            //param
+            //VarValue
             String name = fromValue.getMipsName();
             int fromSp = spTable.get(name);
             int gap = fromSp - curSp;
@@ -242,6 +260,7 @@ public class MipsGenerator {
         } else {
             int gap = 0 - curSp;
             this.restoreSp(gap);
+            this.texts.add("move $s7,$s6\n");//*
             mipsFactory.jrra();
         }
     }
@@ -320,12 +339,19 @@ public class MipsGenerator {
         if (brInst.type == 1) {
             //无条件跳转
             String label = getJumpToLable(brInst.dest);
+//            int toNum = ((BasicBlock)brInst.dest).registerNum;
+//            if(toNum < this.curBlockNum){
+//                int gap = this.basicBlockSpTable.get(label) - curSp;
+//                mipsFactory.restoreSpByGap(gap);
+//                //往前跳，恢复当时的sp
+//            }
             mipsFactory.genJ(label);
         } else {
             //0 : br i1 <condValue>, label <iftrue>, label <iffalse>
             Value condValue = brInst.condValue;
             String reg = "$t0";
             this.visitValueToReg(reg, condValue);
+            //生成一条BNE + 生成一条 j
             mipsFactory.genBrWithLabel(reg,
                     this.getJumpToLable(brInst.ifTure),
                     this.getJumpToLable(brInst.ifFalse));
@@ -373,6 +399,7 @@ public class MipsGenerator {
 
     private void initText() {
         this.texts.add(".text\n");
+        //this.texts.add("move $t7,$sp\n");//
     }
 
 }
