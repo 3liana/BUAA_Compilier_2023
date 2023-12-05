@@ -1,45 +1,13 @@
-int fib_matrix[2][2] = {{1, 1}, {1, 0}};
-const int __res[2][2] = {{5, 5}, {2, 3}};
-const int __useless[4] = {1, 1, 1, 0};
+int d[2][2] = {{1+3,2-4},{3*5,4*1+2}};
+int tmp_0[5] = {0,1,2,3,4};
 
+void prd(int d[][2],int x,int a[]) {
 
-int __power(int n, int cur[][2], int res[][2]) {
-    if (n == 1) {
-        res[0][0] = cur[0][0];
-        res[0][1] = cur[0][1];
-        res[1][0] = cur[1][0];
-        res[1][1] = cur[1][1];
-        return 0;
-    } else {
+    printf("(%d,%d) %d\n",1 ,1,d[1][1]);
+}
 
-    }
+int main()
+{
+    prd(d,100,tmp_0);
     return 0;
-}
-
-int power(int n, int res[][2]) {
-    if (n <= 0) return -1;
-    int temp[2][2] = {{1, 1}, {1, 0}};
-    return __power(n, temp, res);
-}
-
-
-
-
-int main() {
-    int n;
-    n = 6;
-    int res[2][2];
-
-
-        int p;
-        p = 1;
-        int ret = power(p, res);
-        if (ret && 1) {
-            n = n - 1;
-
-        }
-
-
-
-    return 0;
-}
+} 

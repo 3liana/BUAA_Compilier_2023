@@ -49,6 +49,7 @@ public class GetPtrNormal extends Instruction {
         if(this.type == 1){
             s1 = s1 + ", i32 " + this.m.getName();
         }
-        return s0 + s1 + "\n";
+        //return s0 + s1 + "\n";
+        return "normal" + s0 + s1 + "\n";
     }
 }

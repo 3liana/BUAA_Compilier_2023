@@ -45,6 +45,7 @@ public class MipsGenerator {
             this.visitGlobalVar(globalVar);
         }
         this.initText();
+//        this.texts.add("move $s7,$sp\n");//*
         this.inMain = true;
         this.visitFunction(irModule.mainFunction);
         this.inMain = false;
@@ -90,10 +91,11 @@ public class MipsGenerator {
         this.basicBlockSpTable = new HashMap<>();
         //把形参加入符号表
         int len = function.params.size();
-        //0到4存的是$ra
-        this.texts.add("move $s6,$s7\n");//*
+        //0到4存的是$s7
+        //4到8存的是$ra
+//        this.texts.add("move $s6,$s7\n");//*
         this.texts.add("move $s7,$sp\n");//*
-        int place = 4;
+        int place = 8;
         for (int i = len - 1; i >= 0; i--) {
             ParamVarValue v = function.params.get(i);
             spTable.put(v.getMipsName(), place);
@@ -352,11 +354,11 @@ public class MipsGenerator {
             mipsFactory.syscall();
         } else {
             int gap = 0 - curSp;
-            mipsFactory.restoreSpByGap(gap);
+            mipsFactory.restoreSpByGap(gap);//这个没有动curSp
             //注意：只能打印+sp使得进出函数sp不变
             //但是不能改变function里的cursp,防止这个block块之后还有语句
             //this.restoreSp(gap);
-            this.texts.add("move $s7,$s6\n");//*
+//            this.texts.add("move $s7,$s6\n");//*
             mipsFactory.jrra();
         }
     }
@@ -365,9 +367,9 @@ public class MipsGenerator {
 
     public void visitCallInst(CallInst callInst) {
         String fname = callInst.function.getMipsName();
-        if(fname.equals("power")){
-            System.out.println("debug");
-        }
+//        if(fname.equals("power")){
+//            System.out.println("debug");
+//        }
         //确定实参
 //        int count = 0;
 //        for(Value v:callInst.rParams){
@@ -394,8 +396,16 @@ public class MipsGenerator {
         mipsFactory.saveRaBeforeCall("$t0");
         this.minusSp();
         mipsFactory.genSw("$t0");
+        //保存s7
+        String spOriReg = "$s7";
+        this.texts.add("move $t0," + spOriReg +"\n");
+        this.minusSp();
+        mipsFactory.genSw("$t0");
         //
         mipsFactory.genJal(fname);
+        //恢复s7
+        mipsFactory.genLw("0($sp)", spOriReg);
+        this.restoreSp(4);
         //恢复ra
         mipsFactory.genLw("0($sp)", "$ra");
         this.restoreSp(4);
