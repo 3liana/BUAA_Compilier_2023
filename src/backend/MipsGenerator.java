@@ -580,8 +580,14 @@ public class MipsGenerator {
             Type fromType = fromValue.getMyType();
             Type fromTargetType = ((PointerType) fromType).targetType;
             //从二维数组中取 但是只退一层
-            if (fromTargetType instanceof SureArrayType && ((SureArrayType) fromTargetType).type == 1) {
-                int int_m = ((SureArrayType) fromTargetType).m;
+//            if (fromTargetType instanceof SureArrayType && ((SureArrayType) fromTargetType).type == 1) {
+//                int int_m = ((SureArrayType) fromTargetType).m;
+//                this.texts.add("li " + reg2 + "," + int_m + "\n");
+//                this.texts.add("mult " + reg1 + "," + reg2 + "\n");
+//                mipsFactory.genMflo(reg1);
+//            }
+            if (fromTargetType instanceof SureArrayType) {
+                int int_m = ((SureArrayType) fromTargetType).n;
                 this.texts.add("li " + reg2 + "," + int_m + "\n");
                 this.texts.add("mult " + reg1 + "," + reg2 + "\n");
                 mipsFactory.genMflo(reg1);
