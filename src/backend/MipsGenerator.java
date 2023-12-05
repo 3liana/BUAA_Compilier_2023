@@ -3,6 +3,10 @@ package backend;
 import middleend.IRModule;
 import middleend.Operator;
 import middleend.Value;
+import middleend.type.IntegerType;
+import middleend.type.PointerType;
+import middleend.type.SureArrayType;
+import middleend.type.Type;
 import middleend.value.ConstValue;
 import middleend.value.GlobalVar;
 import middleend.value.ParamVarValue;
@@ -54,6 +58,12 @@ public class MipsGenerator {
         curSp -= 4;
     }
 
+    private void minusSpByIntNum(int numOfInt) {
+        int num = numOfInt * 4;
+        mipsFactory.MinusSpByNum(num);
+        curSp -= num;
+    }
+
     private void restoreSp(int num) {
         mipsFactory.restoreSpByGap(num);
         curSp += num;
@@ -65,7 +75,9 @@ public class MipsGenerator {
             globalMips = new GlobalMips(globalVar.name, "word", globalVar.getInitNum());
         } else {
             //数组
-            globalMips = new GlobalMips(globalVar.name, "word", globalVar.initValNums);
+            //这个时候在llvm中已经getPrint()调用过一次了，所以是不是allZero已经可以确定了
+            globalMips = new GlobalMips(globalVar.name, "word", globalVar.initValNums,
+                   globalVar);
         }
         this.datas.add(globalMips.toString());
     }
@@ -103,7 +115,7 @@ public class MipsGenerator {
     private void initBasicBlockLabel(BasicBlock basicBlock) {
         if (!basicBlock.isFirst) {
             String s0 = curFunction + "_block" + basicBlock.registerNum;
-            this.basicBlockSpTable.put(s0,curSp);
+            this.basicBlockSpTable.put(s0, curSp);
             this.curBlockNum = basicBlock.registerNum;
             this.texts.add("#block " + basicBlock.registerNum + ":\n");
             this.texts.add(s0 + ":\n");
@@ -148,10 +160,13 @@ public class MipsGenerator {
             this.visitIcmpInst((IcmpInst) instruction);
         } else if (instruction instanceof ZextInst) {
             this.visitZextInst((ZextInst) instruction);
-        } else if(instruction instanceof BrInst){
+        } else if (instruction instanceof BrInst) {
             this.visitBrInst((BrInst) instruction);
-        }
-        else {
+        } else if (instruction instanceof GetPtrInstSureArray) {
+            this.visitGetPtrInstSureArray((GetPtrInstSureArray) instruction);
+        } else if (instruction instanceof GetPtrNormal) {
+            this.visitGetPtrNormal((GetPtrNormal) instruction);
+        } else {
             System.err.println("unknown instruction type " + instruction.getClass().getName());
         }
     }
@@ -159,8 +174,54 @@ public class MipsGenerator {
 
     //part1
     public void visitAllocaInst(AllocaInst allocaInst) {
-        this.minusSp();
-        this.spTable.put(allocaInst.result.getMipsName(), curSp);
+        if (allocaInst.int_type == 0) {
+            String reg = "$t0";
+            this.minusSp();//存数
+            this.minusSp();//存指针 指向自己上方4位
+            this.texts.add("addi " + reg + ",$sp,4\n");
+            mipsFactory.genSw(reg);
+            this.spTable.put(allocaInst.result.getMipsName(), curSp);
+        } else {
+            //数组
+            Type targetType = allocaInst.getTargetType();
+            if (targetType instanceof SureArrayType) {
+                //数组中的真正数组
+                SureArrayType sureArrayType = (SureArrayType) targetType;
+                //确定数组的数目数量
+                int numOfInt;
+                if (sureArrayType.type == 0) {
+                    numOfInt = sureArrayType.n;
+                } else {
+                    numOfInt = sureArrayType.n * sureArrayType.m;
+                }
+                //
+                this.minusSpByIntNum(numOfInt);
+                //存指针
+                String reg = "$t0";
+                this.minusSp();//存指针 指向自己上方4位
+                this.texts.add("addi " + reg + ",$sp,4\n");
+                mipsFactory.genSw(reg);
+                this.spTable.put(allocaInst.result.getMipsName(), curSp);
+                //this.spTable.put(allocaInst.result.getMipsName(), curSp);
+            } else {
+                //分配函数传参的copy
+                //todo 函数内实参的copy
+//                Type tar_targetType = ((PointerType)targetType).targetType;
+//                if(tar_targetType instanceof IntegerType){
+//                    //一维
+//                } else {
+//                    //Sure 二维
+//                }
+                //this.minusSp();
+                //this.spTable.put(allocaInst.result.getMipsName(), curSp);
+                //存指针
+                String reg = "$t0";
+                this.minusSp();//存指针 指向形参z
+                this.texts.add("addi " + reg + ",$sp,4\n");
+                mipsFactory.genSw(reg);
+                this.spTable.put(allocaInst.result.getMipsName(), curSp);
+            }
+        }
     }
 
     public void visitLoadInst(LoadInst loadInst) {
@@ -168,19 +229,34 @@ public class MipsGenerator {
         Value fromValue = loadInst.fromValue;
         if (fromValue instanceof GlobalVar) {
             fromStr = fromValue.getMipsName();
+            String reg = "$t0";
+            mipsFactory.genLw(fromStr, reg);
+            this.minusSp();
+            mipsFactory.genSw(reg);
+            this.spTable.put(loadInst.result.getMipsName(), curSp);
         } else {
             //param
             //VarValue
+//            String name = fromValue.getMipsName();
+//            int fromSp = spTable.get(name);
+//            int gap = fromSp - curSp;
+//            fromStr = gap + "($sp)";
             String name = fromValue.getMipsName();
-            int fromSp = spTable.get(name);
-            int gap = fromSp - curSp;
-            fromStr = gap + "($sp)";
+            int toSp = spTable.get(name);
+            int gap = toSp - curSp;
+            String pointerLoc = gap + "($sp)";
+            String pointerValueReg = "$t1";
+            mipsFactory.genLw(pointerLoc, pointerValueReg);//pointerReg保存了真正的地址
+            fromStr = "0(" + pointerValueReg + ")";
+
+
+            String reg = "$t0";
+            mipsFactory.genLw(fromStr, reg);
+            this.minusSp();
+            mipsFactory.genSw(reg);
+            this.spTable.put(loadInst.result.getMipsName(), curSp);
         }
-        String reg = "$t0";
-        mipsFactory.genLw(fromStr, reg);
-        this.minusSp();
-        mipsFactory.genSw(reg);
-        this.spTable.put(loadInst.result.getMipsName(), curSp);
+
     }
 
     public void visitStoreInst(StoreInst storeInst) {
@@ -190,17 +266,27 @@ public class MipsGenerator {
         String toStr;
         if (toValue instanceof GlobalVar) {
             toStr = name;
+            Value fromValue = storeInst.fromValue;
+            String reg = "$t0";
+            this.visitValueToReg(reg, fromValue);
+            mipsFactory.genSwTo(reg, toStr);
         }
-        //
+        //Param VarValue
         else {
+            //找到应该存储的地方 i32*
             int toSp = spTable.get(name);
             int gap = toSp - curSp;
-            toStr = gap + "($sp)";
+            String pointerLoc = gap + "($sp)";
+            String pointerValueReg = "$t1";
+            mipsFactory.genLw(pointerLoc, pointerValueReg);//pointerReg保存了真正的地址
+            toStr = "0(" + pointerValueReg + ")";
+            //找到需要存储的值（存到reg）
+            String reg = "$t0";
+            Value fromValue = storeInst.fromValue;
+            this.visitValueToReg(reg, fromValue);
+            //把值存到应该存储的地方
+            mipsFactory.genSwTo(reg, toStr);
         }
-        Value fromValue = storeInst.fromValue;
-        String reg = "$t0";
-        this.visitValueToReg(reg, fromValue);
-        mipsFactory.genSwTo(reg, toStr);
     }
 
     public void visitBinaryInst(BinaryInst binaryInst) {
@@ -232,7 +318,8 @@ public class MipsGenerator {
             mipsFactory.genLi(((ConstValue) value).num, reg);
         } else if (value instanceof GlobalVar) {
             String fromStr = value.getMipsName();
-            mipsFactory.genLw(fromStr, reg);
+            //mipsFactory.genLw(fromStr, reg);
+            mipsFactory.genLa(fromStr, reg);
         } else if (value instanceof VarValue || value instanceof ParamVarValue) {
             String name = value.getMipsName();
             //System.out.println(name);
@@ -393,6 +480,103 @@ public class MipsGenerator {
     }
 
     //part4 数组相关
+    public void visitGetPtrInstSureArray(GetPtrInstSureArray inst) {
+        Value fromValue = inst.fromValue;
+        Value result = inst.result;
+        //1.获取偏移的量到t1
+//        int numOfInt = inst.type == 0 ? inst.n : inst.n * inst.m;
+        //t1保存了取的数量
+        Value n = inst.n;
+        Value m = inst.m;
+        String reg1 = "$t1";
+        String reg2 = "$t2";
+        this.visitValueToReg(reg1, n);
+        if (m != null) {
+            Type fromType = fromValue.getMyType();
+            Type fromTargetType = ((PointerType) fromType).targetType;
+            int num2 = ((SureArrayType) fromTargetType).m;
+            this.texts.add("li " + reg2 + "," + num2 + "\n");
+            this.texts.add("mult " + reg1 + "," + reg2 + "\n");
+            mipsFactory.genMflo(reg1);
+
+            this.visitValueToReg(reg2, m);
+//            this.texts.add("mult " + reg1 + "," + reg2 + "\n");
+//            mipsFactory.genMflo(reg1);
+            this.texts.add("add " + reg1 + "," + reg1 + "," + reg2 + "\n");
+        } else {
+            //m为null
+            //从二维数组中取 但是只退一层
+            Type fromType = fromValue.getMyType();
+            Type fromTargetType = ((PointerType) fromType).targetType;
+            //从二维数组中取 但是只退一层
+            if (((SureArrayType) fromTargetType).type == 1) {
+                int int_m = ((SureArrayType) fromTargetType).m;
+                this.texts.add("li " + reg2 + "," + int_m + "\n");
+                this.texts.add("mult " + reg1 + "," + reg2 + "\n");
+                mipsFactory.genMflo(reg1);
+            }
+        }
+        mipsFactory.genSll2(reg1);
+        //2.获取起始地址到reg0
+        String reg0 = "$t0";
+        this.visitValueToReg(reg0, fromValue);
+        //3.起始地址 + 偏移地址到reg0
+        this.texts.add("add " + reg0 + "," + reg0 + "," + reg1 + "\n");
+        //4.存结果
+        this.minusSp();
+        mipsFactory.genSw(reg0);
+        this.spTable.put(result.getMipsName(), curSp);
+    }
+
+    public void visitGetPtrNormal(GetPtrNormal inst) {
+        Value fromValue = inst.fromValue;
+        Value result = inst.result;
+        //1.获取偏移的量到t1
+//        int numOfInt = inst.type == 0 ? inst.n : inst.n * inst.m;
+        //t1保存了取的数量
+        Value n = inst.n;
+        Value m = inst.m;
+        String reg1 = "$t1";
+        String reg2 = "$t2";
+        this.visitValueToReg(reg1, n);
+        if (m != null) {
+            //有n 有 m
+            Type fromType = fromValue.getMyType();
+            Type fromTargetType = ((PointerType) fromType).targetType;//SureArray
+            int num2 = ((SureArrayType) fromTargetType).m;
+            this.texts.add("li " + reg2 + "," + num2 + "\n");
+            this.texts.add("mult " + reg1 + "," + reg2 + "\n");
+            mipsFactory.genMflo(reg1);//t1*m_num
+
+            this.visitValueToReg(reg2, m);
+//            this.texts.add("mult " + reg1 + "," + reg2 + "\n");
+//            mipsFactory.genMflo(reg1);
+            this.texts.add("add " + reg1 + "," + reg1 + "," + reg2 + "\n");//t1 + m
+        } else {
+            //m为null
+            //从二维数组中取 但是只退一层
+            Type fromType = fromValue.getMyType();
+            Type fromTargetType = ((PointerType) fromType).targetType;
+            //从二维数组中取 但是只退一层
+            if (fromTargetType instanceof SureArrayType && ((SureArrayType) fromTargetType).type == 1) {
+                int int_m = ((SureArrayType) fromTargetType).m;
+                this.texts.add("li " + reg2 + "," + int_m + "\n");
+                this.texts.add("mult " + reg1 + "," + reg2 + "\n");
+                mipsFactory.genMflo(reg1);
+            }
+        }
+        mipsFactory.genSll2(reg1);
+        //2.获取起始地址到reg0
+        String reg0 = "$t0";
+        this.visitValueToReg(reg0, fromValue);
+        //3.起始地址 + 偏移地址到reg0
+        this.texts.add("add " + reg0 + "," + reg0 + "," + reg1 + "\n");
+        //4.存结果
+        this.minusSp();
+        mipsFactory.genSw(reg0);
+        this.spTable.put(result.getMipsName(), curSp);
+    }
+
     private void initData() {
         this.datas.add(".data\n");
     }

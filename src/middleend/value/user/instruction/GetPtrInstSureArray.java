@@ -10,13 +10,13 @@ import middleend.value.user.BasicBlock;
 import middleend.value.user.Instruction;
 
 public class GetPtrInstSureArray extends Instruction {
-    private Value result;
-    private Value fromValue;
+    public Value result;
+    public Value fromValue;
     //fromValue的getMyType结果为Pointer(SureArrayType)
     private Type targetType;
-    private int type;
-    private Value n;
-    private Value m;
+    public int type;
+    public Value n;
+    public Value m;
     private void setResultType1(){
         //退一层
         PointerType fromType = (PointerType)this.fromValue.getMyType();

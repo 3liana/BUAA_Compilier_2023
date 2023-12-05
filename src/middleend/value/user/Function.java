@@ -158,6 +158,13 @@ public class Function extends User {
             );
             new RetInst(lastB);
         }
+        //todo ?
+        if(!(returnType instanceof VoidType) && !s1.contains("ret")){
+            BasicBlock lastB = this.basicBlocks.get(
+                    this.basicBlocks.size()-1
+            );
+            new RetInst(lastB);
+        }
         s1 = this.getBasicBlocksPrint();
         String s2 = "}\n";
         return s0 + s1 + s2;

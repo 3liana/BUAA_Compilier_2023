@@ -43,51 +43,62 @@ public class MipsFactory {
                 "end_check:\n" +
                 ".end_macro\n";
         for (CondString consString : CondString.values()) {
-            s1_name = "check_"+consString.toString();
+            s1_name = "check_" + consString.toString();
             if (consString.toString().equals("eq")) {
                 s4_bKind = "BEQ";
                 this.macros.add(s0 + s1_name + s2 + s3 + s4_bKind + s5 + s6);
             }
-            if(consString.toString().equals("ne")){
+            if (consString.toString().equals("ne")) {
                 s4_bKind = "BNE";
                 this.macros.add(s0 + s1_name + s2 + s3 + s4_bKind + s5 + s6);
             }
-            if(consString.toString().equals("sgt")){
+            if (consString.toString().equals("sgt")) {
                 s4_bKind = "BGTZ";
                 this.macros.add(s0 + s1_name + s2 + s3 +
-                        sSub+
+                        sSub +
                         s4_bKind +
                         s5_2 + s6);
-            }if(consString.toString().equals("sge")){
+            }
+            if (consString.toString().equals("sge")) {
                 s4_bKind = "BGEZ";
                 this.macros.add(s0 + s1_name + s2 + s3 +
-                        sSub+
+                        sSub +
                         s4_bKind +
                         s5_2 + s6);
-            }if(consString.toString().equals("slt")){
+            }
+            if (consString.toString().equals("slt")) {
                 s4_bKind = "BLTZ";
                 this.macros.add(s0 + s1_name + s2 + s3 +
-                        sSub+
+                        sSub +
                         s4_bKind +
                         s5_2 + s6);
-            }if(consString.toString().equals("sle")){
+            }
+            if (consString.toString().equals("sle")) {
                 s4_bKind = "BLEZ";
                 this.macros.add(s0 + s1_name + s2 + s3 +
-                        sSub+
+                        sSub +
                         s4_bKind +
                         s5_2 + s6);
             }
         }
     }
-    public void genIcmp(String macroName,String reg1,String reg2){
+
+    public void genIcmp(String macroName, String reg1, String reg2) {
         this.texts.add(macroName + " " + reg1 + "," + reg2 + "\n");
     }
-    public void genBrWithLabel(String reg,String trueLabel,String falseLabel){
-        this.texts.add("BNE " + reg + ",$zero," + trueLabel+"\n");
+
+    public void genBrWithLabel(String reg, String trueLabel, String falseLabel) {
+        this.texts.add("BNE " + reg + ",$zero," + trueLabel + "\n");
         this.genJ(falseLabel);
     }
+
     public void MinusSpBy4() {
         this.texts.add("addi $sp,$sp,-4\n");
+    }
+
+    public void MinusSpByNum(int num) {
+        int minus_num = num * -1;
+        this.texts.add("addi $sp,$sp," + minus_num + "\n");
     }
 
     public void restoreSpByGap(int gap) {
@@ -134,7 +145,10 @@ public class MipsFactory {
         String s0 = "li " + reg + "," + fromNum + "\n";
         this.texts.add(s0);
     }
-
+    public void genLa(String fromStr,String reg){
+        String s0 = "la " + reg + "," + fromStr + "\n";
+        this.texts.add(s0);
+    }
     public void genMove(String reg1, String reg2) {
         String s0 = "move " + reg1 + "," + reg2 + "\n";
         this.texts.add(s0);
@@ -149,7 +163,9 @@ public class MipsFactory {
         String s0 = "mflo " + reg + "\n";
         this.texts.add(s0);
     }
-
+    public void genSll2(String reg){
+        this.texts.add("sll " + reg + "," + reg + ",2\n");
+    }
     public void genError(String string) {
         this.texts.add("error " + string + "\n");
     }

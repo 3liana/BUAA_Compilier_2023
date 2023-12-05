@@ -15,9 +15,9 @@ public class GlobalVar extends User {
     private int initNum;
     //    private int num;//不需要这个 直接更改的是Value父类继承给子类的属性
     public int type;//0 0维
-    private Type targetType;
+    public Type targetType;
     public ArrayList<ArrayList<Integer>> initValNums;
-    private boolean ax2AllZero = true;
+    public boolean ax2AllZero = true;
 
     public GlobalVar(String name, boolean isConst, int num) {
         this.name = name;
@@ -58,6 +58,7 @@ public class GlobalVar extends User {
         } else {
             StringBuilder sb = new StringBuilder();
             if (this.initValNums == null) {
+                this.ax2AllZero = true;
                 sb.append("zeroinitializer");
             } else {
                 SureArrayType targetType = (SureArrayType) this.targetType;
@@ -105,7 +106,7 @@ public class GlobalVar extends User {
             }
         }
         if (!allZero) {
-            this.ax2AllZero = false;
+            this.ax2AllZero = false;//只要有一层不是全0就不是全0
             sb.append("[");
             for (int i = 0; i < level.size() - 1; i++) {
                 sb.append("i32 " + level.get(i));

@@ -7,13 +7,13 @@ import middleend.value.user.BasicBlock;
 import middleend.value.user.Instruction;
 
 public class GetPtrNormal extends Instruction {
-    private Value result;
-    private Value fromValue;
+    public Value result;
+    public Value fromValue;
     //fromValue的getMyType结果为Pointer(SureArrayType)
     private Type targetType;
     private int type;
-    private Value n;
-    private Value m;
+    public Value n;
+    public Value m;
     public GetPtrNormal(BasicBlock b, Value result, Value from, Value n){
         //from肯定是一个PointType
         //只有一个n 不退
