@@ -54,7 +54,7 @@ public class Compiler {
         for(String s :mipsOutput2){
             sb.append(s);
         }
-        System.out.println(sb.toString());
+        //System.out.println(sb.toString());
         byte[] mipsDataBytes = (sb.toString()).getBytes();
         File mipsOutputFile = new File("mips.txt");
         OutputStream mipsFOut = new FileOutputStream(mipsOutputFile);

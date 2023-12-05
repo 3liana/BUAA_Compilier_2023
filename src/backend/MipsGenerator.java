@@ -101,6 +101,7 @@ public class MipsGenerator {
             place += 4;
         }
         for (BasicBlock basicBlock : function.basicBlocks) {
+            String name = basicBlock.getMipsName();
             this.visitBasicBlock(basicBlock);
         }
 
@@ -181,6 +182,7 @@ public class MipsGenerator {
             this.texts.add("addi " + reg + ",$sp,4\n");
             mipsFactory.genSw(reg);
             this.spTable.put(allocaInst.result.getMipsName(), curSp);
+            //System.out.println("put " + allocaInst.result.getMipsName() + " in " + curSp );
         } else {
             //数组
             Type targetType = allocaInst.getTargetType();
@@ -212,7 +214,7 @@ public class MipsGenerator {
 //                } else {
 //                    //Sure 二维
 //                }
-                //this.minusSp();
+                this.minusSp();
                 //this.spTable.put(allocaInst.result.getMipsName(), curSp);
                 //存指针
                 String reg = "$t0";
@@ -220,6 +222,7 @@ public class MipsGenerator {
                 this.texts.add("addi " + reg + ",$sp,4\n");
                 mipsFactory.genSw(reg);
                 this.spTable.put(allocaInst.result.getMipsName(), curSp);
+               // System.out.println("put " + allocaInst.result.getMipsName() + " in " + curSp );
             }
         }
     }
@@ -227,6 +230,9 @@ public class MipsGenerator {
     public void visitLoadInst(LoadInst loadInst) {
         String fromStr;
         Value fromValue = loadInst.fromValue;
+//        if(loadInst.result.getMipsName().equals("%24")){
+//            System.out.println("debug");
+//        }
         if (fromValue instanceof GlobalVar) {
             fromStr = fromValue.getMipsName();
             String reg = "$t0";
@@ -346,7 +352,10 @@ public class MipsGenerator {
             mipsFactory.syscall();
         } else {
             int gap = 0 - curSp;
-            this.restoreSp(gap);
+            mipsFactory.restoreSpByGap(gap);
+            //注意：只能打印+sp使得进出函数sp不变
+            //但是不能改变function里的cursp,防止这个block块之后还有语句
+            //this.restoreSp(gap);
             this.texts.add("move $s7,$s6\n");//*
             mipsFactory.jrra();
         }
@@ -356,6 +365,9 @@ public class MipsGenerator {
 
     public void visitCallInst(CallInst callInst) {
         String fname = callInst.function.getMipsName();
+        if(fname.equals("power")){
+            System.out.println("debug");
+        }
         //确定实参
 //        int count = 0;
 //        for(Value v:callInst.rParams){
