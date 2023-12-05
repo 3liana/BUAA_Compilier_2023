@@ -1,13 +1,20 @@
-int d[2][2] = {{1+3,2-4},{3*5,4*1+2}};
-int tmp_0[5] = {0,1,2,3,4};
-
-void prd(int d[][2],int x,int a[]) {
-
-    printf("(%d,%d) %d\n",1 ,1,d[1][1]);
-}
-
-int main()
-{
-    prd(d,100,tmp_0);
+int main(){
+    int a1=1,a2;
+    a2=a1;
+    int temp;
+    int n,i;
+    n=getint();
+    for(i=a1*a1;i<n+1;i=i+1){
+        temp=a2;
+        a2=a1+a2;
+        a1=temp;
+        if(i%2==1){
+            continue;
+        }
+        printf("round %d: %d\n",i,a1);
+        if(i>19){
+            break;
+        }
+    }
     return 0;
-} 
+}
