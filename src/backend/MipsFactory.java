@@ -1,7 +1,6 @@
 package backend;
 
 import middleend.Value;
-import middleend.type.LabelType;
 import middleend.value.ConstValue;
 import middleend.value.GlobalVar;
 import middleend.value.VarValue;

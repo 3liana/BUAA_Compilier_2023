@@ -250,10 +250,6 @@ public class MipsGenerator {
         } else {
             //param
             //VarValue
-//            String name = fromValue.getMipsName();
-//            int fromSp = spTable.get(name);
-//            int gap = fromSp - curSp;
-//            fromStr = gap + "($sp)";
             String name = fromValue.getMipsName();
             int toSp = spTable.get(name);
             int gap = toSp - curSp;
@@ -321,12 +317,7 @@ public class MipsGenerator {
         Value v1 = binaryInst.op1;//t1
         Value v2 = binaryInst.op2;//t2
         Operator op = binaryInst.operator;
-        //todo 优化
         if (optimize) {
-            //todo 乘除法优化
-//            if (value instanceof ConstValue) {
-//                mipsFactory.genLi(((ConstValue) value).num, reg);
-//            }
             if (v1 instanceof ConstValue &&
                     v2 instanceof ConstValue) {
                 //都为常量
@@ -465,31 +456,28 @@ public class MipsGenerator {
 
     public void visitCallInst(CallInst callInst) {
         String fname = callInst.function.getMipsName();
-//        if(fname.equals("power")){
-//            System.out.println("debug");
-//        }
         //确定实参
-//        int count = 0;
-//        for(Value v:callInst.rParams){
-//            if(count <= 3){
-//                String reg = "$a" + count;
-//                this.visitValueToReg(reg,v);
-//            } else {
-//                String reg = "$t0";
-//                this.visitValueToReg(reg, v);
-//                this.MinusSp\();
-//                mipsFactory.genSw(reg);
-//            }
-//            count++;
-//        }
-        //全放内存得了
-        //传递实参
-        for (Value v : callInst.rParams) {
-            String reg = "$t0";
-            this.visitValueToReg(reg, v);
-            this.minusSp();
-            mipsFactory.genSw(reg);
+        int count = 0;
+        for(Value v:callInst.rParams){
+            if(count <= 3){
+                String reg = "$a" + count;
+                this.visitValueToReg(reg,v);
+            } else {
+                String reg = "$t0";
+                this.visitValueToReg(reg, v);
+                this.minusSp();
+                mipsFactory.genSw(reg);
+            }
+            count++;
         }
+//        //全放内存得了
+//        //传递实参
+//        for (Value v : callInst.rParams) {
+//            String reg = "$t0";
+//            this.visitValueToReg(reg, v);
+//            this.minusSp();
+//            mipsFactory.genSw(reg);
+//        }
         //保存ra
         mipsFactory.saveRaBeforeCall("$t0");
         this.minusSp();

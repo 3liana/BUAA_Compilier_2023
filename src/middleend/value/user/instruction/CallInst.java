@@ -34,7 +34,6 @@ public class CallInst extends Instruction {
         //深拷贝一个一模一样的function，只不过给形参setNum，然后深拷贝每一条指令，最后得到一个返回的
         //VarValue的getNum()
         //todo 考虑数据流
-        //todo
     }
 
     public String getPrint(){
