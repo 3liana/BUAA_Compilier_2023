@@ -34,8 +34,10 @@ public class MipsGenerator {
     private boolean debug = true;
     private String curFunction;
     private int curBlockNum;
+    public boolean optimize;
 
-    public MipsGenerator() {
+    public MipsGenerator(boolean optimaze) {
+        this.optimize = optimaze;
         this.visitModule();
     }
 
@@ -50,7 +52,7 @@ public class MipsGenerator {
         this.visitFunction(irModule.mainFunction);
         this.inMain = false;
         for (Function function : irModule.functions) {
-            if(function.output){//优化
+            if (function.output) {//优化
                 this.visitFunction(function);
             }
         }
@@ -80,7 +82,7 @@ public class MipsGenerator {
             //数组
             //这个时候在llvm中已经getPrint()调用过一次了，所以是不是allZero已经可以确定了
             globalMips = new GlobalMips(globalVar.name, "word", globalVar.initValNums,
-                   globalVar);
+                    globalVar);
         }
         this.datas.add(globalMips.toString());
     }
@@ -106,7 +108,7 @@ public class MipsGenerator {
         }
         for (BasicBlock basicBlock : function.basicBlocks) {
             String name = basicBlock.getMipsName();
-            if(!basicBlock.delete){
+            if (!basicBlock.delete) {
                 this.visitBasicBlock(basicBlock);
             }
         }
@@ -213,7 +215,6 @@ public class MipsGenerator {
                 //this.spTable.put(allocaInst.result.getMipsName(), curSp);
             } else {
                 //分配函数传参的copy
-                //todo 函数内实参的copy
 //                Type tar_targetType = ((PointerType)targetType).targetType;
 //                if(tar_targetType instanceof IntegerType){
 //                    //一维
@@ -228,7 +229,7 @@ public class MipsGenerator {
                 this.texts.add("addi " + reg + ",$sp,4\n");
                 mipsFactory.genSw(reg);
                 this.spTable.put(allocaInst.result.getMipsName(), curSp);
-               // System.out.println("put " + allocaInst.result.getMipsName() + " in " + curSp );
+                // System.out.println("put " + allocaInst.result.getMipsName() + " in " + curSp );
             }
         }
     }
@@ -301,12 +302,105 @@ public class MipsGenerator {
         }
     }
 
+    private boolean isPowerOfTwo(int num) {
+        return num > 0 && ((num & (num - 1)) == 0);
+    }
+    private int countPowerOfTwo(int d){
+        int count = 0;
+        while (d > 1) {
+            if ((d & 1) != 0) {
+                break;
+            }
+            d >>= 1;
+            count++;
+        }
+        return count;
+    }
     public void visitBinaryInst(BinaryInst binaryInst) {
         Value result = binaryInst.result;//t0
         Value v1 = binaryInst.op1;//t1
         Value v2 = binaryInst.op2;//t2
         Operator op = binaryInst.operator;
-
+        //todo 优化
+        if (optimize) {
+            //todo 乘除法优化
+//            if (value instanceof ConstValue) {
+//                mipsFactory.genLi(((ConstValue) value).num, reg);
+//            }
+            if (v1 instanceof ConstValue &&
+                    v2 instanceof ConstValue) {
+                //都为常量
+                String reg = "$t0";
+                int a = Integer.parseInt(((ConstValue) v1).num);
+                int b = Integer.parseInt(((ConstValue) v2).num);
+                int ans = Operator.cal(a, b, op);
+                mipsFactory.genLi(String.valueOf(ans), reg);
+                this.minusSp();
+                mipsFactory.genSw("$t0");
+                this.spTable.put(result.getMipsName(), curSp);
+                return;
+            } else if ((v1 instanceof ConstValue || v2 instanceof ConstValue)) {
+                //有一是常数
+                //不一定能成功优化，只有成功优化才返回
+                boolean success = false;
+                int num;
+                //变为t1与num做运算保存到t0
+                if (v1 instanceof ConstValue) {
+                    num = Integer.parseInt(((ConstValue) v1).num);
+                    this.visitValueToReg("$t1", v2);
+                } else {
+                    num = Integer.parseInt(((ConstValue) v2).num);
+                    this.visitValueToReg("$t1", v1);
+                }
+                //优化上述运算
+                String reg = "$t0";
+                if (op == Operator.add) {
+                    //加
+                    this.texts.add("addi " + reg + ",$t1," + num + "\n");//可以少一条li
+                    success = true;
+                } else if (op == Operator.mul) {
+                    if (num == 0) {
+                        //*0
+                        mipsFactory.genLi("0", reg);
+                        success = true;
+                    } else if (num == 1) {
+                        //*1
+                        reg = "$t1";//直接把t1存进去
+                        success = true;
+                    } else if (num == -1) {
+                        //* -1
+                        this.texts.add("sub " + reg + ",$zero,$t1\n");
+                        success = true;
+                    } else if (isPowerOfTwo(num)) {
+                        //2的n次方
+                        int k = countPowerOfTwo(num);
+                        this.texts.add("sll " + reg + "," + "$t1" + "," + k + "\n");
+                        success = true;
+                    } else if(isPowerOfTwo(num + 1)){
+                        //2的n次方-1
+                        int k = countPowerOfTwo(num + 1);
+                        this.texts.add("sll " + reg + "," + "$t1" + "," + k + "\n");//t0 = t1 << k
+                        this.texts.add("sub " + reg + "," + reg + "," + "$t1" + "\n");//t0 = t0 - t1;
+                        success = true;
+                    } else if(isPowerOfTwo(num - 1)){
+                        //2的n次方+1
+                        int k = countPowerOfTwo(num - 1);
+                        this.texts.add("sll " + reg + "," + "$t1" + "," + k + "\n");//t0 = t1 << k
+                        this.texts.add("add " + reg + "," + reg + "," + "$t1" + "\n");//t0 = t0 + t1;
+                        success = true;
+                    }
+                } else if(op == Operator.sdiv){
+                    //todo 除法优化
+                }
+                if (success) {
+                    this.minusSp();
+                    mipsFactory.genSw(reg);
+                    this.spTable.put(result.getMipsName(), curSp);
+                    return;
+                }
+            }
+        }
+        //优化done
         this.visitValueToReg("$t1", v1);
         this.visitValueToReg("$t2", v2);
         String opStr = op.toMips();
@@ -402,7 +496,7 @@ public class MipsGenerator {
         mipsFactory.genSw("$t0");
         //保存s7
         String spOriReg = "$s7";
-        this.texts.add("move $t0," + spOriReg +"\n");
+        this.texts.add("move $t0," + spOriReg + "\n");
         this.minusSp();
         mipsFactory.genSw("$t0");
         //

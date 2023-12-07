@@ -50,22 +50,40 @@ public class Compiler {
             //优化中间代码
             IROptimaze irOptimaze = new IROptimaze();
             irOptimaze.optimaze();
-            //todo 优化目标代码
             //
             File outputFile_llvm_after = new File("testfilei_21373061_方沐阳_优化后中间代码.txt");
             OutputStream fOut_llvm_after = new FileOutputStream(outputFile_llvm_after);
             String after_llvm = module.getPrint();
             byte[] llvmDataBytes_after = (after_llvm).getBytes();
             fOut_llvm_after.write(llvmDataBytes_after);//写入优化后文件
-            Compiler.writeMips("testfilei_21373061_方沐阳_优化后目标代码.txt");
+
         }
         //生成mips
-        Compiler.writeMips("mips.txt");
-        //File mipsOutputFile = new File("mips.txt");
-
+        //优化后的目标代码写入两个文件
+        MipsGenerator mipsGenerator = new MipsGenerator(optimaze);
+        ArrayList<String> mipsOutput0 = mipsGenerator.macros;
+        ArrayList<String> mipsOutput1 = mipsGenerator.datas;
+        ArrayList<String> mipsOutput2 = mipsGenerator.texts;
+        StringBuilder sb = new StringBuilder();
+        for(String s :mipsOutput0){
+            sb.append(s);
+        }
+        for(String s :mipsOutput1){
+            sb.append(s);
+        }
+        for(String s :mipsOutput2){
+            sb.append(s);
+        }
+        byte[] mipsDataBytes = (sb.toString()).getBytes();
+        File mipsOutputFile = new File("testfilei_21373061_方沐阳_优化后目标代码.txt");
+        OutputStream mipsFOut = new FileOutputStream(mipsOutputFile);
+        mipsFOut.write(mipsDataBytes);
+        mipsOutputFile = new File("mips.txt");
+        mipsFOut = new FileOutputStream(mipsOutputFile);
+        mipsFOut.write(mipsDataBytes);
     }
     private static void writeMips(String filename)throws IOException{
-        MipsGenerator mipsGenerator = new MipsGenerator();
+        MipsGenerator mipsGenerator = new MipsGenerator(false);
         ArrayList<String> mipsOutput0 = mipsGenerator.macros;
         ArrayList<String> mipsOutput1 = mipsGenerator.datas;
         ArrayList<String> mipsOutput2 = mipsGenerator.texts;

@@ -6,8 +6,9 @@ public enum Operator {
     mul,
     sdiv,
     srem;//mod
-    public String toMips(){
-        switch (this){
+
+    public String toMips() {
+        switch (this) {
             case add:
                 return "add";
             case sub:
@@ -21,5 +22,27 @@ public enum Operator {
             default:
                 return "";
         }
+    }
+
+    public static int cal(int a, int b, Operator op) {
+        int ans = 0;
+        switch (op) {
+            case add:
+                ans = a + b;
+                break;
+            case sub:
+                ans = a - b;
+                break;
+            case mul:
+                ans = a * b;
+                break;
+            case sdiv:
+                ans = a / b;
+                break;
+            case srem:
+                ans = a % b;
+                break;
+        }
+        return ans;
     }
 }
