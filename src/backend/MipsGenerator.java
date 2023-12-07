@@ -106,7 +106,9 @@ public class MipsGenerator {
         }
         for (BasicBlock basicBlock : function.basicBlocks) {
             String name = basicBlock.getMipsName();
-            this.visitBasicBlock(basicBlock);
+            if(!basicBlock.delete){
+                this.visitBasicBlock(basicBlock);
+            }
         }
 
     }

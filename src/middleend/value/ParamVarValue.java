@@ -30,7 +30,7 @@ public class ParamVarValue extends Value {
         return tableName;
     }
     public String getName(){
-        return "%" + registerNum;
+        return "%" + "_" + registerNum;
     }
 
 }

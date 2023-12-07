@@ -6,11 +6,13 @@ import middleend.type.Type;
 
 public class CondValue extends Value {
     private int registerNum;
-    public CondValue(int registerNum){
+
+    public CondValue(int registerNum) {
         this.registerNum = registerNum;
         this.setMyType(IntegerType.i1Type);
     }
-    public String getName(){
-        return "%" + this.registerNum;
+
+    public String getName() {
+        return "%" + "_" + this.registerNum;
     }
 }

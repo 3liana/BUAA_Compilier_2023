@@ -12,6 +12,7 @@ public class BrInst extends Instruction {
     public Value ifTure;//BasicBlock
     public Value ifFalse;//BasicBlock
     public Value dest;//BasicBlock
+
     public BrInst(BasicBlock b,Value condValue, Value ifTure, Value ifFalse){
         super(b);
         this.type = 0;

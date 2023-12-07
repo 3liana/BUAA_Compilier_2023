@@ -16,6 +16,7 @@ public class IROptimaze {
     }
     public void optimazeFunction(Function function){
         function.startOptimaze();//标记一些function为死
+        function.optimazeBlockJump();
         //优化function里的basicblock
         for(BasicBlock block:function.basicBlocks){
             this.optimazeBasicBlock(block);

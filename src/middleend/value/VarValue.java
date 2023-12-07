@@ -33,7 +33,7 @@ public class VarValue extends Value {
         return tableName;
     }
     public String getName(){
-        return "%" + registerNum;
+        return "%" + "_" + registerNum;
     }
 
 
