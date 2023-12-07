@@ -1,12 +1,15 @@
 package middleend.value.user;
 
+import middleend.Value;
 import middleend.type.InstType;
+import middleend.value.ConstValue;
 import middleend.value.User;
 import middleend.value.user.instruction.terminateInst.BrInst;
 import middleend.value.user.instruction.terminateInst.RetInst;
 
 public class Instruction extends User {
     private BasicBlock basicBlock;
+
     public Instruction(){}
     public Instruction(BasicBlock basicBlock){
         this.basicBlock = basicBlock;
@@ -23,5 +26,7 @@ public class Instruction extends User {
         } else {
             return false;
         }
+    }
+    public void replaceValueWithConst(Value oldValue, ConstValue newConst){
     }
 }

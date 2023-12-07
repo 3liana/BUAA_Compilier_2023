@@ -28,7 +28,7 @@ public class MipsFactory {
 //        return ans;
 //    }
     public void genIcmpMacro() {
-        String sSub = "sub $t0,%reg1, %reg2\n    ";
+        String sSub = "subu $t0,%reg1, %reg2\n    ";
         String s0 = ".macro ";
         String s1_name = "";//宏的名字
         String s2 = " %reg1, %reg2\n";
@@ -93,16 +93,16 @@ public class MipsFactory {
     }
 
     public void MinusSpBy4() {
-        this.texts.add("addi $sp,$sp,-4\n");
+        this.texts.add("addiu $sp,$sp,-4\n");
     }
 
     public void MinusSpByNum(int num) {
         int minus_num = num * -1;
-        this.texts.add("addi $sp,$sp," + minus_num + "\n");
+        this.texts.add("addiu $sp,$sp," + minus_num + "\n");
     }
 
     public void restoreSpByGap(int gap) {
-        this.texts.add("addi $sp,$sp," + gap + "\n");
+        this.texts.add("addiu $sp,$sp," + gap + "\n");
     }
 
     public void genLw(String fromStr, String reg) {

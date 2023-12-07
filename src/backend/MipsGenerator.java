@@ -138,7 +138,7 @@ public class MipsGenerator {
 //        int nowSp = originalSp + curSp;
 //        this.texts.add("li $sp," + nowSp + "\n");
         String orginalReg = "$s7";//最开始的sp被保存在t7里
-        this.texts.add("addi $sp," + orginalReg + "," + curSp + "\n");
+        this.texts.add("addiu $sp," + orginalReg + "," + curSp + "\n");
         //this.texts.add("addi $sp,$sp," + curSp + "\n");
         for (Instruction instruction : basicBlock.instructions) {
             this.visitInstruction(instruction);
@@ -187,7 +187,7 @@ public class MipsGenerator {
             String reg = "$t0";
             this.minusSp();//存数
             this.minusSp();//存指针 指向自己上方4位
-            this.texts.add("addi " + reg + ",$sp,4\n");
+            this.texts.add("addiu " + reg + ",$sp,4\n");
             mipsFactory.genSw(reg);
             this.spTable.put(allocaInst.result.getMipsName(), curSp);
             //System.out.println("put " + allocaInst.result.getMipsName() + " in " + curSp );
@@ -209,7 +209,7 @@ public class MipsGenerator {
                 //存指针
                 String reg = "$t0";
                 this.minusSp();//存指针 指向自己上方4位
-                this.texts.add("addi " + reg + ",$sp,4\n");
+                this.texts.add("addiu " + reg + ",$sp,4\n");
                 mipsFactory.genSw(reg);
                 this.spTable.put(allocaInst.result.getMipsName(), curSp);
                 //this.spTable.put(allocaInst.result.getMipsName(), curSp);
@@ -226,7 +226,7 @@ public class MipsGenerator {
                 //存指针
                 String reg = "$t0";
                 this.minusSp();//存指针 指向形参z
-                this.texts.add("addi " + reg + ",$sp,4\n");
+                this.texts.add("addiu " + reg + ",$sp,4\n");
                 mipsFactory.genSw(reg);
                 this.spTable.put(allocaInst.result.getMipsName(), curSp);
                 // System.out.println("put " + allocaInst.result.getMipsName() + " in " + curSp );
@@ -356,7 +356,7 @@ public class MipsGenerator {
                 String reg = "$t0";
                 if (op == Operator.add) {
                     //加
-                    this.texts.add("addi " + reg + ",$t1," + num + "\n");//可以少一条li
+                    this.texts.add("addiu " + reg + ",$t1," + num + "\n");//可以少一条li
                     success = true;
                 } else if (op == Operator.mul) {
                     if (num == 0) {
@@ -369,7 +369,7 @@ public class MipsGenerator {
                         success = true;
                     } else if (num == -1) {
                         //* -1
-                        this.texts.add("sub " + reg + ",$zero,$t1\n");
+                        this.texts.add("subu " + reg + ",$zero,$t1\n");
                         success = true;
                     } else if (isPowerOfTwo(num)) {
                         //2的n次方
@@ -380,13 +380,13 @@ public class MipsGenerator {
                         //2的n次方-1
                         int k = countPowerOfTwo(num + 1);
                         this.texts.add("sll " + reg + "," + "$t1" + "," + k + "\n");//t0 = t1 << k
-                        this.texts.add("sub " + reg + "," + reg + "," + "$t1" + "\n");//t0 = t0 - t1;
+                        this.texts.add("subu " + reg + "," + reg + "," + "$t1" + "\n");//t0 = t0 - t1;
                         success = true;
                     } else if(isPowerOfTwo(num - 1)){
                         //2的n次方+1
                         int k = countPowerOfTwo(num - 1);
                         this.texts.add("sll " + reg + "," + "$t1" + "," + k + "\n");//t0 = t1 << k
-                        this.texts.add("add " + reg + "," + reg + "," + "$t1" + "\n");//t0 = t0 + t1;
+                        this.texts.add("addu " + reg + "," + reg + "," + "$t1" + "\n");//t0 = t0 + t1;
                         success = true;
                     }
                 } else if(op == Operator.sdiv){
@@ -622,7 +622,7 @@ public class MipsGenerator {
             this.visitValueToReg(reg2, m);
 //            this.texts.add("mult " + reg1 + "," + reg2 + "\n");
 //            mipsFactory.genMflo(reg1);
-            this.texts.add("add " + reg1 + "," + reg1 + "," + reg2 + "\n");
+            this.texts.add("addu " + reg1 + "," + reg1 + "," + reg2 + "\n");
         } else {
             //m为null
             //从二维数组中取 但是只退一层
@@ -641,7 +641,7 @@ public class MipsGenerator {
         String reg0 = "$t0";
         this.visitValueToReg(reg0, fromValue);
         //3.起始地址 + 偏移地址到reg0
-        this.texts.add("add " + reg0 + "," + reg0 + "," + reg1 + "\n");
+        this.texts.add("addu " + reg0 + "," + reg0 + "," + reg1 + "\n");
         //4.存结果
         this.minusSp();
         mipsFactory.genSw(reg0);
@@ -671,7 +671,7 @@ public class MipsGenerator {
             this.visitValueToReg(reg2, m);
 //            this.texts.add("mult " + reg1 + "," + reg2 + "\n");
 //            mipsFactory.genMflo(reg1);
-            this.texts.add("add " + reg1 + "," + reg1 + "," + reg2 + "\n");//t1 + m
+            this.texts.add("addu " + reg1 + "," + reg1 + "," + reg2 + "\n");//t1 + m
         } else {
             //m为null
             //从二维数组中取 但是只退一层
@@ -696,7 +696,7 @@ public class MipsGenerator {
         String reg0 = "$t0";
         this.visitValueToReg(reg0, fromValue);
         //3.起始地址 + 偏移地址到reg0
-        this.texts.add("add " + reg0 + "," + reg0 + "," + reg1 + "\n");
+        this.texts.add("addu " + reg0 + "," + reg0 + "," + reg1 + "\n");
         //4.存结果
         this.minusSp();
         mipsFactory.genSw(reg0);

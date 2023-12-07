@@ -1,6 +1,7 @@
 package middleend.value.user.instruction;
 
 import middleend.Value;
+import middleend.value.ConstValue;
 import middleend.value.user.BasicBlock;
 import middleend.value.user.Function;
 import middleend.value.user.Instruction;
@@ -55,5 +56,11 @@ public class CallInst extends Instruction {
                 sParam +
                 ")\n";
     }
-
+    public void replaceValueWithConst(Value oldValue, ConstValue newConst){
+        for(int i = 0; i< this.rParams.size();i++){
+            if(this.rParams.get(i).equals(oldValue)){
+                this.rParams.set(i,newConst);
+            }
+        }
+    }
 }

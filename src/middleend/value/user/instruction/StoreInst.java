@@ -4,6 +4,7 @@ import middleend.Value;
 import middleend.type.IntegerType;
 import middleend.type.PointerType;
 import middleend.type.Type;
+import middleend.value.ConstValue;
 import middleend.value.VarValue;
 import middleend.value.user.BasicBlock;
 import middleend.value.user.Instruction;
@@ -51,5 +52,10 @@ public class StoreInst extends Instruction {
     public String getPrint(){
         return "store " + fromType + " " + fromValue.getName() +", " +
                 fromType + "* " + toValue.getName() + "\n";
+    }
+    public void replaceValueWithConst(Value oldValue, ConstValue newConst){
+        if(this.fromValue.equals(oldValue)){
+            this.fromValue = newConst;
+        }
     }
 }

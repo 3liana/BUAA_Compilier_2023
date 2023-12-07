@@ -10,9 +10,9 @@ public enum Operator {
     public String toMips() {
         switch (this) {
             case add:
-                return "add";
+                return "addu";
             case sub:
-                return "sub";
+                return "subu";
             case mul:
                 return "mult";
             case sdiv:

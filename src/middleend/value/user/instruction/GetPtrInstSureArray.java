@@ -94,5 +94,12 @@ public class GetPtrInstSureArray extends Instruction {
         }
         return s0 + s1 + "\n";
     }
-
+    public void replaceValueWithConst(Value oldValue, ConstValue newConst){
+        if(this.n.equals(oldValue)){
+            this.n = newConst;
+        }
+        if(this.m != null && this.m.equals(oldValue)){
+            this.m = newConst;
+        }
+    }
 }

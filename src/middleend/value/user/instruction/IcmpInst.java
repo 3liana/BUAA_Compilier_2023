@@ -3,6 +3,7 @@ package middleend.value.user.instruction;
 import middleend.Value;
 import middleend.type.IntegerType;
 import middleend.type.Type;
+import middleend.value.ConstValue;
 import middleend.value.user.BasicBlock;
 import middleend.value.user.Instruction;
 
@@ -23,5 +24,13 @@ public class IcmpInst extends Instruction {
     public String getPrint(){
         return this.result.getName() + " = icmp " + cond + " " + ty + " " +
                 this.v0.getName() + " , " + this.v1.getName() + "\n";
+    }
+    public void replaceValueWithConst(Value oldValue, ConstValue newConst){
+        if(this.v0.equals(oldValue)){
+            v0 = newConst;
+        }
+        if(v1.equals(oldValue)){
+            v1 = newConst;
+        }
     }
 }

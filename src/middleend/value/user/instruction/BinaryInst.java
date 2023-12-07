@@ -4,6 +4,7 @@ import middleend.Operator;
 import middleend.Value;
 import middleend.type.IntegerType;
 import middleend.type.Type;
+import middleend.value.ConstValue;
 import middleend.value.user.BasicBlock;
 import middleend.value.user.Instruction;
 
@@ -45,5 +46,13 @@ public class BinaryInst extends Instruction {
         return result.getName() + " = " + operator.toString()
                 + " " + type + " " + op1.getName() + " , " +
                 op2.getName() + "\n";
+    }
+    public void replaceValueWithConst(Value oldValue, ConstValue newConst){
+        if(op1.equals(oldValue)){
+            op1 = newConst;
+        }
+        if(op2.equals(oldValue)){
+            op2 = newConst;
+        }
     }
 }

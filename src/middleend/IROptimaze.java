@@ -15,14 +15,12 @@ public class IROptimaze {
         }
     }
     public void optimazeFunction(Function function){
+        //以下是以function为单位的优化
         function.startOptimaze();//标记一些function为死
         function.optimazeBlockJump();
-        //优化function里的basicblock
+        function.optimizeCalculation();
+        //以下进行以block为单位进行的优化
     }
-
-
-
-
 
     public void optimazeBasicBlock(BasicBlock basicBlock){
         for(Instruction instruction:basicBlock.instructions){

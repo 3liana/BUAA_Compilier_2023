@@ -3,6 +3,7 @@ package middleend.value.user.instruction.terminateInst;
 import middleend.Value;
 import middleend.type.Type;
 import middleend.type.VoidType;
+import middleend.value.ConstValue;
 import middleend.value.user.BasicBlock;
 import middleend.value.user.Instruction;
 
@@ -26,6 +27,11 @@ public class RetInst extends Instruction {
             return "ret void\n";
         } else {
             return "ret" + " " + this.type + " " + value.getName() + "\n";
+        }
+    }
+    public void replaceValueWithConst(Value oldValue, ConstValue newConst){
+        if (value != null && value.equals(oldValue)){
+            value = newConst;
         }
     }
 }

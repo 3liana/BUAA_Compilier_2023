@@ -4,6 +4,7 @@ import middleend.Value;
 import middleend.type.IntegerType;
 import middleend.type.PointerType;
 import middleend.type.Type;
+import middleend.value.ConstValue;
 import middleend.value.user.BasicBlock;
 import middleend.value.user.Instruction;
 

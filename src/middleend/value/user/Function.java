@@ -3,18 +3,22 @@ package middleend.value.user;
 import frontend.paser_package.FuncFParam;
 import middleend.Generator;
 import middleend.IRModule;
+import middleend.Operator;
 import middleend.Value;
 import middleend.symbol.SymbolTable;
 import middleend.type.Type;
 import middleend.type.VoidType;
+import middleend.value.ConstValue;
 import middleend.value.ParamVarValue;
 import middleend.value.User;
 import middleend.value.VarValue;
 import middleend.value.user.instruction.AllocaInst;
+import middleend.value.user.instruction.BinaryInst;
 import middleend.value.user.instruction.StoreInst;
 import middleend.value.user.instruction.terminateInst.BrInst;
 import middleend.value.user.instruction.terminateInst.RetInst;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -199,7 +203,9 @@ public class Function extends User {
             }
         }
     }
-    private HashMap<BasicBlock,BasicBlock> replaceJumpInstructions = new HashMap<>();
+
+    private HashMap<BasicBlock, BasicBlock> replaceJumpInstructions = new HashMap<>();
+
     public void optimazeBlockJump() {
         for (BasicBlock block : this.basicBlocks) {
             if (block.instructions.size() == 1 &&
@@ -218,35 +224,83 @@ public class Function extends User {
                         //System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
                         BasicBlock key = entry.getKey();
                         BasicBlock value = entry.getValue();
-                        if(value.equals(block)){
-                            replaceJumpInstructions.put(key,((BasicBlock) brInst.dest));
+                        if (value.equals(block)) {
+                            replaceJumpInstructions.put(key, ((BasicBlock) brInst.dest));
                         }
                     }
-                    replaceJumpInstructions.put(block,((BasicBlock) brInst.dest));
+                    replaceJumpInstructions.put(block, ((BasicBlock) brInst.dest));
                     //done
                 }
             }
         }
-        for(BasicBlock block:this.basicBlocks){
-            if(block.terInst instanceof BrInst){
+        for (BasicBlock block : this.basicBlocks) {
+            if (block.terInst instanceof BrInst) {
                 BrInst brInst = (BrInst) block.terInst;
-                if(brInst.type == 1){
+                if (brInst.type == 1) {
                     BasicBlock dest = (BasicBlock) brInst.dest;
-                    if(replaceJumpInstructions.containsKey(dest)){
+                    if (replaceJumpInstructions.containsKey(dest)) {
                         brInst.dest = replaceJumpInstructions.get(dest);
                     }
                 } else {
                     BasicBlock ifTrue = (BasicBlock) brInst.ifTure;
-                    if(replaceJumpInstructions.containsKey(ifTrue)){
+                    if (replaceJumpInstructions.containsKey(ifTrue)) {
                         brInst.ifTure = replaceJumpInstructions.get(ifTrue);
                     }
                     BasicBlock ifFalse = (BasicBlock) brInst.ifFalse;
-                    if(replaceJumpInstructions.containsKey(ifFalse)){
+                    if (replaceJumpInstructions.containsKey(ifFalse)) {
                         brInst.ifFalse = replaceJumpInstructions.get(ifFalse);
                     }
                 }
             }
         }
         replaceJumpInstructions = new HashMap<>();
+    }
+
+    public void optimizeCalculation() {
+        int change;
+        do {
+            change = replaceConstantValue();
+            System.out.println("change is " + change);
+        } while (change != 0);
+    }
+
+    private int replaceConstantValue() {
+        int change = 0;
+        HashMap<Value, ConstValue> toReplace = new HashMap<>();
+        for (BasicBlock block : this.basicBlocks) {
+            ArrayList<Instruction> toRemove = new ArrayList<>();
+            for (Instruction inst : block.instructions) {
+                if (inst instanceof BinaryInst) {
+                    BinaryInst binaryInst = (BinaryInst) inst;
+                    if (binaryInst.op1 instanceof ConstValue && binaryInst.op2 instanceof ConstValue) {
+                        //标记这条Instruction
+                        //block.instructions.remove(inst);//?直接remove
+                        toRemove.add(inst);
+                        int ans = Operator.cal(
+                                ((ConstValue) (binaryInst.op1)).getNum(),
+                                ((ConstValue) (binaryInst.op2)).getNum(),
+                                binaryInst.operator
+                        );
+                        ConstValue newValue = new ConstValue(String.valueOf(ans));
+                        Value oldResult = binaryInst.result;
+                        //要把所有的这条binaryInst删掉
+                        //并把其余Instruction里所有的oldResult全部替换为newValue
+                        toReplace.put(oldResult, newValue);
+                        change++;
+                    }
+                }
+            }
+            for(Instruction inst:toRemove){
+                block.instructions.remove(inst);
+            }
+        }
+        for (BasicBlock block : this.basicBlocks) {
+            for (Instruction inst : block.instructions) {
+                for (Value key : toReplace.keySet()) {
+                    inst.replaceValueWithConst(key,toReplace.get(key));
+                }
+            }
+        }
+        return change;
     }
 }

@@ -3,6 +3,7 @@ package middleend.value.user.instruction;
 import middleend.Value;
 import middleend.type.PointerType;
 import middleend.type.Type;
+import middleend.value.ConstValue;
 import middleend.value.user.BasicBlock;
 import middleend.value.user.Instruction;
 
@@ -51,5 +52,13 @@ public class GetPtrNormal extends Instruction {
         }
         return s0 + s1 + "\n";
         //return "normal" + s0 + s1 + "\n";
+    }
+    public void replaceValueWithConst(Value oldValue, ConstValue newConst){
+        if(this.n.equals(oldValue)){
+            this.n = newConst;
+        }
+        if(this.m !=null && this.m.equals(oldValue)){
+            this.m = newConst;
+        }
     }
 }
