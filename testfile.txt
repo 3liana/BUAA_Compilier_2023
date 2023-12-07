@@ -1,4 +1,11 @@
+int f1(){
+return 1;
+}
+void f2(){
+printf("hello");
+}
 int main(){
+    f2();
     int a1=1,a2;
     a2=a1;
     int temp;

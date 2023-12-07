@@ -8,9 +8,11 @@ import frontend.lexer_package.*;
 import frontend.paser_package.CompUnit;
 import middleend.Generator;
 import middleend.IRModule;
+import middleend.IROptimaze;
 
 public class Compiler {
     private static boolean debugValueCalculation = false;
+    private static boolean optimaze = true;
     public static void main(String[] args) throws IOException {
         File outputFile = new File("llvm_ir.txt");
         OutputStream fOut = new FileOutputStream(outputFile);
@@ -40,6 +42,29 @@ public class Compiler {
 //            //打印符号表 和对应的值
 //            generator.tableList.debugValueCalculation();
 //        }
+        if(optimaze){
+            File outputFile_llvm_before = new File("testfilei_21373061_方沐阳_优化前中间代码.txt");
+            OutputStream fOut_llvm_before = new FileOutputStream(outputFile_llvm_before);
+            fOut_llvm_before.write(llvmDataBytes);
+            Compiler.writeMips("testfilei_21373061_方沐阳_优化前目标代码.txt");
+            //优化中间代码
+            IROptimaze irOptimaze = new IROptimaze();
+            irOptimaze.optimaze();
+            //todo 优化目标代码
+            //
+            File outputFile_llvm_after = new File("testfilei_21373061_方沐阳_优化后中间代码.txt");
+            OutputStream fOut_llvm_after = new FileOutputStream(outputFile_llvm_after);
+            String after_llvm = module.getPrint();
+            byte[] llvmDataBytes_after = (after_llvm).getBytes();
+            fOut_llvm_after.write(llvmDataBytes_after);//写入优化后文件
+            Compiler.writeMips("testfilei_21373061_方沐阳_优化后目标代码.txt");
+        }
+        //生成mips
+        Compiler.writeMips("mips.txt");
+        //File mipsOutputFile = new File("mips.txt");
+
+    }
+    private static void writeMips(String filename)throws IOException{
         MipsGenerator mipsGenerator = new MipsGenerator();
         ArrayList<String> mipsOutput0 = mipsGenerator.macros;
         ArrayList<String> mipsOutput1 = mipsGenerator.datas;
@@ -56,11 +81,10 @@ public class Compiler {
         }
         //System.out.println(sb.toString());
         byte[] mipsDataBytes = (sb.toString()).getBytes();
-        File mipsOutputFile = new File("mips.txt");
+        File mipsOutputFile = new File(filename);
         OutputStream mipsFOut = new FileOutputStream(mipsOutputFile);
         mipsFOut.write(mipsDataBytes);
     }
-
     private static void getTokens(BufferedReader br, ArrayList<Token> tokens) throws IOException {
         String line;
         boolean inComment = false;

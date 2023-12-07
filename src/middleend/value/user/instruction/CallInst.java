@@ -15,6 +15,7 @@ public class CallInst extends Instruction {
     public CallInst(BasicBlock basicBlock,Function function, ArrayList<Value> rParams){
         super(basicBlock);
         this.function = function;
+        this.function.addCalledNum();
         this.rParams = rParams;
         this.runFunction();
     }
@@ -22,6 +23,7 @@ public class CallInst extends Instruction {
                     Value result){
         super(basicBlock);
         this.function = function;
+        this.function.addCalledNum();
         this.rParams = rParams;
         this.result = result;
         this.result.setMyType(function.returnType);

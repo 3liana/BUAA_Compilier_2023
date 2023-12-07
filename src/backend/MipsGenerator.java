@@ -50,7 +50,9 @@ public class MipsGenerator {
         this.visitFunction(irModule.mainFunction);
         this.inMain = false;
         for (Function function : irModule.functions) {
-            this.visitFunction(function);
+            if(function.output){//优化
+                this.visitFunction(function);
+            }
         }
     }
 

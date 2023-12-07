@@ -25,6 +25,9 @@ public class Function extends User {
     private String blank = " ";
     public ArrayList<ParamVarValue> params = new ArrayList<>();
     private SymbolTable symbolTable;
+    private int calledNum = 0;
+    private boolean optimaze = false;
+    public boolean output = true;
 
     public Function(String name, Type returnType) {
         this.name = name;
@@ -136,6 +139,11 @@ public class Function extends User {
     }
 
     public String getPrint() {
+        //优化
+        if(!output){
+            return "";
+        }
+        //
         StringBuilder sParam = new StringBuilder();
         int i;
         for (i = 0; i < this.params.size() - 1; i++) {
@@ -169,4 +177,18 @@ public class Function extends User {
         String s2 = "}\n";
         return s0 + s1 + s2;
     }
+    public void addCalledNum(){
+        this.calledNum++;
+    }
+    public void startOptimaze(){
+        this.optimaze = true;
+        if(!name.equals("main")){
+            if(this.calledNum == 0){
+                //判断为死函数
+                //如果不优化是不会判断任何函数为死的
+                output = false;
+            }
+        }
+    }
+
 }
