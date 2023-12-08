@@ -25,7 +25,7 @@ public class MipsGenerator {
     public ArrayList<String> datas = new ArrayList<>();
     public ArrayList<String> texts = new ArrayList<>();
     public ArrayList<String> macros = new ArrayList<>();
-    public HashMap<String, Integer> spTable = new HashMap<>();
+    public HashMap<String, ValuePlace> spTable = new HashMap<>();
     // public HashMap<String, String> tempTable = new HashMap<>();
     public HashMap<String, Integer> basicBlockSpTable = new HashMap<>();
     private MipsFactory mipsFactory = new MipsFactory(datas, texts, macros);
@@ -100,9 +100,13 @@ public class MipsGenerator {
 //        this.texts.add("move $s6,$s7\n");//*
         this.texts.add("move $s7,$sp\n");//*
         int place = 8;
-        for (int i = len - 1; i >= 0; i--) {
+        for (int i = 0; i < 4 && i < len; i++) {
             ParamVarValue v = function.params.get(i);
-            spTable.put(v.getMipsName(), place);
+            spTable.put(v.getMipsName(), new ValuePlace("$a" + i));
+        }
+        for (int i = len - 1; i >= 4; i--) {
+            ParamVarValue v = function.params.get(i);
+            spTable.put(v.getMipsName(), new ValuePlace(place));
             // System.out.println("put " + v.getMipsName() + " in " + place);
             place += 4;
         }
@@ -189,7 +193,7 @@ public class MipsGenerator {
             this.minusSp();//存指针 指向自己上方4位
             this.texts.add("addiu " + reg + ",$sp,4\n");
             mipsFactory.genSw(reg);
-            this.spTable.put(allocaInst.result.getMipsName(), curSp);
+            this.spTable.put(allocaInst.result.getMipsName(), new ValuePlace(curSp));
             //System.out.println("put " + allocaInst.result.getMipsName() + " in " + curSp );
         } else {
             //数组
@@ -211,7 +215,7 @@ public class MipsGenerator {
                 this.minusSp();//存指针 指向自己上方4位
                 this.texts.add("addiu " + reg + ",$sp,4\n");
                 mipsFactory.genSw(reg);
-                this.spTable.put(allocaInst.result.getMipsName(), curSp);
+                this.spTable.put(allocaInst.result.getMipsName(), new ValuePlace(curSp));
                 //this.spTable.put(allocaInst.result.getMipsName(), curSp);
             } else {
                 //分配函数传参的copy
@@ -228,7 +232,7 @@ public class MipsGenerator {
                 this.minusSp();//存指针 指向形参z
                 this.texts.add("addiu " + reg + ",$sp,4\n");
                 mipsFactory.genSw(reg);
-                this.spTable.put(allocaInst.result.getMipsName(), curSp);
+                this.spTable.put(allocaInst.result.getMipsName(), new ValuePlace(curSp));
                 // System.out.println("put " + allocaInst.result.getMipsName() + " in " + curSp );
             }
         }
@@ -246,14 +250,15 @@ public class MipsGenerator {
             mipsFactory.genLw(fromStr, reg);
             this.minusSp();
             mipsFactory.genSw(reg);
-            this.spTable.put(loadInst.result.getMipsName(), curSp);
+            this.spTable.put(loadInst.result.getMipsName(), new ValuePlace(curSp));
         } else {
             //param
             //VarValue
             String name = fromValue.getMipsName();
-            int toSp = spTable.get(name);
-            int gap = toSp - curSp;
-            String pointerLoc = gap + "($sp)";
+//            int toSp = spTable.get(name);
+//            int gap = toSp - curSp;
+//            String pointerLoc = gap + "($sp)";
+            String pointerLoc = spTable.get(name).getPlace(curSp);
             String pointerValueReg = "$t1";
             mipsFactory.genLw(pointerLoc, pointerValueReg);//pointerReg保存了真正的地址
             fromStr = "0(" + pointerValueReg + ")";
@@ -263,7 +268,7 @@ public class MipsGenerator {
             mipsFactory.genLw(fromStr, reg);
             this.minusSp();
             mipsFactory.genSw(reg);
-            this.spTable.put(loadInst.result.getMipsName(), curSp);
+            this.spTable.put(loadInst.result.getMipsName(), new ValuePlace(curSp));
         }
 
     }
@@ -283,9 +288,10 @@ public class MipsGenerator {
         //Param VarValue
         else {
             //找到应该存储的地方 i32*
-            int toSp = spTable.get(name);
-            int gap = toSp - curSp;
-            String pointerLoc = gap + "($sp)";
+//            int toSp = spTable.get(name);
+//            int gap = toSp - curSp;
+//            String pointerLoc = gap + "($sp)";
+            String pointerLoc = spTable.get(name).getPlace(curSp);
             String pointerValueReg = "$t1";
             mipsFactory.genLw(pointerLoc, pointerValueReg);//pointerReg保存了真正的地址
             toStr = "0(" + pointerValueReg + ")";
@@ -301,7 +307,8 @@ public class MipsGenerator {
     private boolean isPowerOfTwo(int num) {
         return num > 0 && ((num & (num - 1)) == 0);
     }
-    private int countPowerOfTwo(int d){
+
+    private int countPowerOfTwo(int d) {
         int count = 0;
         while (d > 1) {
             if ((d & 1) != 0) {
@@ -312,6 +319,7 @@ public class MipsGenerator {
         }
         return count;
     }
+
     public void visitBinaryInst(BinaryInst binaryInst) {
         Value result = binaryInst.result;//t0
         Value v1 = binaryInst.op1;//t1
@@ -328,7 +336,7 @@ public class MipsGenerator {
                 mipsFactory.genLi(String.valueOf(ans), reg);
                 this.minusSp();
                 mipsFactory.genSw("$t0");
-                this.spTable.put(result.getMipsName(), curSp);
+                this.spTable.put(result.getMipsName(), new ValuePlace(curSp));
                 return;
             } else if ((v1 instanceof ConstValue || v2 instanceof ConstValue)) {
                 //有一是常数
@@ -367,26 +375,26 @@ public class MipsGenerator {
                         int k = countPowerOfTwo(num);
                         this.texts.add("sll " + reg + "," + "$t1" + "," + k + "\n");
                         success = true;
-                    } else if(isPowerOfTwo(num + 1)){
+                    } else if (isPowerOfTwo(num + 1)) {
                         //2的n次方-1
                         int k = countPowerOfTwo(num + 1);
                         this.texts.add("sll " + reg + "," + "$t1" + "," + k + "\n");//t0 = t1 << k
                         this.texts.add("subu " + reg + "," + reg + "," + "$t1" + "\n");//t0 = t0 - t1;
                         success = true;
-                    } else if(isPowerOfTwo(num - 1)){
+                    } else if (isPowerOfTwo(num - 1)) {
                         //2的n次方+1
                         int k = countPowerOfTwo(num - 1);
                         this.texts.add("sll " + reg + "," + "$t1" + "," + k + "\n");//t0 = t1 << k
                         this.texts.add("addu " + reg + "," + reg + "," + "$t1" + "\n");//t0 = t0 + t1;
                         success = true;
                     }
-                } else if(op == Operator.sdiv){
+                } else if (op == Operator.sdiv) {
                     //todo 除法优化
                 }
                 if (success) {
                     this.minusSp();
                     mipsFactory.genSw(reg);
-                    this.spTable.put(result.getMipsName(), curSp);
+                    this.spTable.put(result.getMipsName(), new ValuePlace(curSp));
                     return;
                 }
             }
@@ -407,7 +415,7 @@ public class MipsGenerator {
         }
         this.minusSp();
         mipsFactory.genSw("$t0");
-        this.spTable.put(result.getMipsName(), curSp);
+        this.spTable.put(result.getMipsName(), new ValuePlace(curSp));
     }
 
     private void visitValueToReg(String reg, Value value) {
@@ -420,10 +428,17 @@ public class MipsGenerator {
         } else if (value instanceof VarValue || value instanceof ParamVarValue) {
             String name = value.getMipsName();
             //System.out.println(name);
-            int fromSp = spTable.get(name);
-            int gap = fromSp - curSp;
-            String fromStr = gap + "($sp)";
-            mipsFactory.genLw(fromStr, reg);
+//            int fromSp = spTable.get(name);
+//            int gap = fromSp - curSp;
+//            String fromStr = gap + "($sp)";
+            String fromStr = spTable.get(name).getPlace(curSp);
+            if(fromStr.toCharArray()[0] == '$'){
+             //被存储在寄存器中
+                mipsFactory.genMove(reg, fromStr);
+            }else {
+                //被存储在内存中
+                mipsFactory.genLw(fromStr, reg);
+            }
         } else {
             mipsFactory.genError("visitValueToReg");
         }
@@ -458,10 +473,10 @@ public class MipsGenerator {
         String fname = callInst.function.getMipsName();
         //确定实参
         int count = 0;
-        for(Value v:callInst.rParams){
-            if(count <= 3){
+        for (Value v : callInst.rParams) {
+            if (count <= 3) {
                 String reg = "$a" + count;
-                this.visitValueToReg(reg,v);
+                this.visitValueToReg(reg, v);
             } else {
                 String reg = "$t0";
                 this.visitValueToReg(reg, v);
@@ -496,15 +511,17 @@ public class MipsGenerator {
         mipsFactory.genLw("0($sp)", "$ra");
         this.restoreSp(4);
         //如果参数超过四个 还要恢复内存里给参数的
-        int paramGap = 4 * (callInst.rParams.size());
-        this.restoreSp(paramGap);
+        if(callInst.rParams.size() > 4){
+            int paramGap = 4 * (callInst.rParams.size()-4);
+            this.restoreSp(paramGap);
+        }
         //
         Value result = callInst.result;
         if (result != null) {
             mipsFactory.genMove("$t0", "$v0");
             this.minusSp();
             mipsFactory.genSw("$t0");
-            this.spTable.put(result.getMipsName(), curSp);
+            this.spTable.put(result.getMipsName(), new ValuePlace(curSp));
         }
     }
 
@@ -515,7 +532,7 @@ public class MipsGenerator {
             mipsFactory.genRead();
             this.minusSp();
             mipsFactory.genSw("$v0");
-            this.spTable.put(v.getMipsName(), curSp);
+            this.spTable.put(v.getMipsName(), new ValuePlace(curSp));
         } else if (libraryCallInst.type == 2) {
             //putch
             String reg = "$a0";//放到a0上然后syscall输出
@@ -573,7 +590,7 @@ public class MipsGenerator {
         //保存结果
         this.minusSp();
         mipsFactory.genSw("$t0");//宏把比较的结果保存在了t0上面
-        this.spTable.put(result.getMipsName(), curSp);
+        this.spTable.put(result.getMipsName(), new ValuePlace(curSp));
     }
 
     public void visitZextInst(ZextInst zextInst) {
@@ -584,7 +601,7 @@ public class MipsGenerator {
         //保存结果
         this.minusSp();
         mipsFactory.genSw("$t0");//宏把比较的结果保存在了t0上面
-        this.spTable.put(result.getMipsName(), curSp);
+        this.spTable.put(result.getMipsName(), new ValuePlace(curSp));
     }
 
     //part4 数组相关
@@ -633,7 +650,7 @@ public class MipsGenerator {
         //4.存结果
         this.minusSp();
         mipsFactory.genSw(reg0);
-        this.spTable.put(result.getMipsName(), curSp);
+        this.spTable.put(result.getMipsName(), new ValuePlace(curSp));
     }
 
     public void visitGetPtrNormal(GetPtrNormal inst) {
@@ -688,7 +705,7 @@ public class MipsGenerator {
         //4.存结果
         this.minusSp();
         mipsFactory.genSw(reg0);
-        this.spTable.put(result.getMipsName(), curSp);
+        this.spTable.put(result.getMipsName(), new ValuePlace(curSp));
     }
 
     private void initData() {

@@ -1,6 +1,10 @@
 package backend;
 
 public class ValuePlace {
+//    public static ValuePlace a0 = new ValuePlace("$a0");
+//    public static ValuePlace a1 = new ValuePlace("$a1");
+//    public static ValuePlace a2 = new ValuePlace("$a2");
+//    public static ValuePlace a3 = new ValuePlace("$a3");
     private int spPlace = 1;
     private String regPlace = null;
     private int type;

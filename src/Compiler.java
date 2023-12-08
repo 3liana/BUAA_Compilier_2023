@@ -12,7 +12,7 @@ import middleend.IROptimaze;
 
 public class Compiler {
     private static boolean debugValueCalculation = false;
-    private static boolean optimaze = true;
+    private static boolean optimaze = false;
     public static void main(String[] args) throws IOException {
         File outputFile = new File("llvm_ir.txt");
         OutputStream fOut = new FileOutputStream(outputFile);
